@@ -1,0 +1,2477 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#060402">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Bi' Kokoreç</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Lora:ital,wght@0,500;0,600;0,700;1,500;1,600;1,700&display=swap" rel="stylesheet">
+
+<style>
+/* ═══════════════════════════════════════════════════
+   BI' KOKOREÇ — Müşteri Uygulaması
+   ═══════════════════════════════════════════════════ */
+:root{
+  --bg0:#060402; --bg1:#0C0805; --bg2:#141008; --bg3:#1C150A; --bg4:#241A0C;
+  --fire:#D64004; --flame:#E85010; --ember:#F86828; --spark:#FF8848;
+  --gold:#C87C1C; --amber:#DC9828;
+  --cream:#F0E0C0; --fog:rgba(240,224,192,.65);
+  --mist:rgba(240,224,192,.38); --veil:rgba(240,224,192,.10);
+  --green:#4CAF50; --red:#e05555;
+  --r:14px; --r-lg:20px; --r-xl:28px; --r-full:100px;
+
+  --safe-top:env(safe-area-inset-top);
+  --safe-bot:env(safe-area-inset-bottom);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{font-size:clamp(14px,4vw,16px);-webkit-text-size-adjust:100%}
+body{
+  background:var(--bg0);color:var(--cream);font-family:'Syne',system-ui,sans-serif;
+  min-height:100vh;min-height:100dvh;overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+input,button,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer;background:none;border:none}
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]{-moz-appearance:textfield;appearance:textfield}
+
+/* ═══ SCROLL LOCK (modals open) ═══ */
+body.no-scroll{overflow:hidden;position:fixed;width:100%}
+
+/* ═══ SCREENS ═══ */
+.screen{display:none;min-height:100vh;min-height:100dvh;flex-direction:column;padding-top:var(--safe-top);padding-bottom:var(--safe-bot)}
+.screen.active{display:flex}
+
+/* ═══════════════════════════════════════════════════
+   LOADING SCREEN
+   ═══════════════════════════════════════════════════ */
+#loadingScreen{
+  display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse 70% 50% at 50% 45%,rgba(180,48,4,.25) 0%,transparent 65%),var(--bg0);
+}
+.loading-brand{
+  font-family:'Lora',serif;font-size:2.4rem;font-weight:600;
+  letter-spacing:-.02em;
+  animation:pulse 1.6s ease-in-out infinite;
+}
+.loading-brand em{font-style:italic;color:var(--ember)}
+@keyframes pulse{
+  0%,100%{opacity:.5;transform:scale(1)}
+  50%{opacity:1;transform:scale(1.03)}
+}
+
+/* ═══════════════════════════════════════════════════
+   AUTH SCREEN (welcome + OTP)
+   ═══════════════════════════════════════════════════ */
+#authScreen{
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 100%,rgba(180,48,4,.22) 0%,transparent 65%),
+    radial-gradient(ellipse 60% 40% at 50% 0%,rgba(200,124,28,.12) 0%,transparent 60%),
+    var(--bg0);
+  padding:24px;
+}
+.auth-inner{flex:1;display:flex;flex-direction:column;justify-content:center;max-width:420px;margin:0 auto;width:100%;gap:28px}
+.brand-big{text-align:center;margin-bottom:8px}
+.brand-big .top-text{
+  font-size:.8rem;color:var(--mist);letter-spacing:4px;font-weight:600;
+  text-transform:uppercase;margin-bottom:8px;
+}
+.brand-big h1{
+  font-family:'Lora',serif;font-size:clamp(2.4rem,11vw,3.4rem);font-weight:600;
+  line-height:.95;letter-spacing:-.03em;
+}
+.brand-big h1 em{font-style:italic;color:var(--ember);font-weight:700}
+.brand-big .tagline{
+  font-size:.75rem;color:var(--fog);margin-top:14px;
+  letter-spacing:2px;text-transform:uppercase;font-weight:500;
+}
+.brand-big .tagline::before,.brand-big .tagline::after{
+  content:'•';color:var(--ember);margin:0 10px;
+}
+
+.auth-card{
+  background:var(--bg2);border:1px solid var(--veil);border-radius:var(--r-xl);
+  padding:28px 22px;display:flex;flex-direction:column;gap:16px;
+}
+.auth-card h2{
+  font-family:'Lora',serif;font-size:1.35rem;font-weight:600;
+}
+.auth-card .sub{font-size:.82rem;color:var(--mist);line-height:1.5}
+
+.field{display:flex;flex-direction:column;gap:6px}
+.field-label{font-size:.7rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--mist);font-weight:700}
+.input-field{
+  background:var(--bg3);border:1.5px solid var(--veil);border-radius:var(--r);
+  padding:14px 16px;color:var(--cream);font-size:1rem;outline:none;
+  transition:border-color .2s,background .2s;
+  width:100%;
+}
+.input-field:focus{border-color:rgba(232,80,16,.5);background:var(--bg4)}
+.input-field::placeholder{color:var(--mist)}
+select.input-field{appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23F86828' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;}
+select.input-field option{background:var(--bg3);color:var(--cream)}
+
+.phone-wrap{display:flex;gap:8px;align-items:stretch}
+.phone-prefix{
+  background:var(--bg3);border:1.5px solid var(--veil);border-radius:var(--r);
+  padding:14px 14px;color:var(--ember);font-weight:700;font-size:1rem;
+  display:flex;align-items:center;
+}
+
+.checkbox-row{display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:6px 0}
+.checkbox{
+  width:20px;height:20px;min-width:20px;border-radius:6px;
+  background:var(--bg3);border:1.5px solid var(--veil);
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;position:relative;top:1px;
+}
+.checkbox.checked{background:var(--fire);border-color:var(--fire)}
+.checkbox.checked::after{content:'✓';color:#fff;font-size:.85rem;font-weight:700}
+.checkbox-label{font-size:.78rem;color:var(--fog);line-height:1.5;flex:1}
+.checkbox-label strong{color:var(--cream);font-weight:600}
+.checkbox-label a{color:var(--ember);text-decoration:underline}
+
+.btn-primary{
+  width:100%;
+  background:linear-gradient(135deg,var(--flame) 0%,var(--fire) 100%);
+  color:#fff;border:none;border-radius:var(--r-lg);padding:16px;
+  font-size:.95rem;font-weight:700;letter-spacing:.5px;
+  transition:transform .15s,box-shadow .2s;
+  position:relative;overflow:hidden;
+  box-shadow:0 8px 24px rgba(214,64,4,.25);
+}
+.btn-primary:active{transform:scale(.97)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.btn-primary::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.2) 0%,transparent 55%);
+  pointer-events:none;
+}
+
+.btn-text{
+  background:none;border:none;color:var(--ember);font-size:.85rem;
+  font-weight:600;padding:8px;
+}
+
+/* OTP inputs */
+.otp-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:8px 0}
+.otp-input{
+  background:var(--bg3);border:1.5px solid var(--veil);border-radius:var(--r);
+  text-align:center;font-family:'Lora',serif;font-size:1.4rem;font-weight:600;
+  color:var(--ember);padding:14px 0;outline:none;width:100%;aspect-ratio:1;
+  transition:all .15s;
+}
+.otp-input:focus{border-color:var(--ember);background:var(--bg4);transform:scale(1.05)}
+.otp-input.filled{background:var(--bg4);border-color:rgba(232,80,16,.4)}
+
+.otp-timer{text-align:center;font-size:.75rem;color:var(--mist);margin-top:4px}
+.otp-timer strong{color:var(--ember)}
+
+/* ═══════════════════════════════════════════════════
+   MAIN APP — Shared
+   ═══════════════════════════════════════════════════ */
+.top-header{
+  position:sticky;top:0;z-index:50;
+  background:rgba(6,4,2,.92);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--veil);
+  padding:14px 20px calc(14px + var(--safe-top)) 20px;
+  padding-top:calc(14px + var(--safe-top));
+  display:flex;align-items:center;justify-content:space-between;
+}
+.header-brand{font-family:'Lora',serif;font-size:1.3rem;font-weight:600;line-height:1}
+.header-brand em{font-style:italic;color:var(--ember)}
+.header-actions{display:flex;gap:6px;align-items:center}
+.icon-btn{
+  width:38px;height:38px;background:var(--veil);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:1rem;
+  transition:background .15s;
+}
+.icon-btn:active{background:rgba(240,224,192,.18)}
+
+.status-pill{
+  font-size:.58rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;
+  padding:4px 10px;border-radius:var(--r-full);
+}
+.status-pill.open{background:rgba(76,175,80,.12);color:var(--green);border:1px solid rgba(76,175,80,.3)}
+.status-pill.closed{background:rgba(224,85,85,.1);color:var(--red);border:1px solid rgba(224,85,85,.3)}
+
+/* ═══════════════════════════════════════════════════
+   HOME / MENU SCREEN
+   ═══════════════════════════════════════════════════ */
+#mainScreen{display:none}
+#mainScreen.active{display:flex}
+
+.main-content{flex:1;padding:16px 16px 120px 16px;overflow-y:auto;max-width:560px;margin:0 auto;width:100%}
+
+.hero{
+  background:linear-gradient(135deg,rgba(232,80,16,.08) 0%,rgba(200,124,28,.05) 100%);
+  border:1px solid var(--veil);border-radius:var(--r-xl);
+  padding:22px 20px;margin-bottom:18px;position:relative;overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;top:-50%;right:-20%;width:60%;height:200%;
+  background:radial-gradient(circle,rgba(248,104,40,.15) 0%,transparent 60%);
+  pointer-events:none;
+}
+.hero-greeting{font-size:.72rem;color:var(--mist);letter-spacing:2px;text-transform:uppercase;font-weight:600;margin-bottom:4px}
+.hero-name{font-family:'Lora',serif;font-size:1.4rem;font-weight:600;margin-bottom:10px}
+.hero-name em{font-style:italic;color:var(--ember)}
+.hero-hours{font-size:.72rem;color:var(--fog);margin-top:8px}
+.hero-hours strong{color:var(--cream)}
+
+/* Category chips */
+.cat-scroll{
+  display:flex;gap:8px;overflow-x:auto;padding:4px 0 12px;
+  margin:0 -16px 16px;padding-left:16px;padding-right:16px;
+  scrollbar-width:none;
+}
+.cat-scroll::-webkit-scrollbar{display:none}
+.cat-chip{
+  flex-shrink:0;padding:9px 16px;font-size:.75rem;font-weight:700;letter-spacing:.5px;
+  border:1px solid var(--veil);border-radius:var(--r-full);
+  color:var(--mist);background:transparent;transition:all .2s;
+  display:flex;align-items:center;gap:6px;white-space:nowrap;
+}
+.cat-chip.active{background:var(--fire);border-color:var(--fire);color:#fff;box-shadow:0 4px 14px rgba(214,64,4,.3)}
+
+/* Menu section */
+.menu-section{margin-bottom:28px}
+.section-title{
+  font-family:'Lora',serif;font-size:1.3rem;font-weight:600;
+  margin-bottom:12px;display:flex;align-items:center;gap:10px;
+}
+.section-title .emoji{font-size:1.5rem}
+
+.item-card{
+  background:var(--bg2);border:1px solid var(--veil);border-radius:var(--r-lg);
+  padding:14px;margin-bottom:10px;display:flex;gap:14px;align-items:center;
+  transition:all .2s;cursor:pointer;
+}
+.item-card:active{transform:scale(.98);border-color:rgba(232,80,16,.3)}
+.item-emoji{
+  width:56px;height:56px;background:var(--bg3);border-radius:var(--r);
+  display:flex;align-items:center;justify-content:center;font-size:2rem;
+  flex-shrink:0;border:1px solid var(--veil);
+}
+.item-info{flex:1;min-width:0}
+.item-name{font-size:.95rem;font-weight:600;margin-bottom:3px}
+.item-desc{font-size:.72rem;color:var(--fog);line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.item-price-row{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+.item-price{font-family:'Lora',serif;font-size:1.05rem;font-weight:600;color:var(--ember)}
+.item-add{
+  width:32px;height:32px;background:rgba(232,80,16,.12);border:1px solid rgba(232,80,16,.3);
+  border-radius:50%;color:var(--ember);font-size:1.2rem;font-weight:600;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;
+}
+.item-add:active{background:var(--fire);color:#fff;border-color:var(--fire)}
+
+/* ═══════════════════════════════════════════════════
+   BOTTOM NAV
+   ═══════════════════════════════════════════════════ */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;z-index:40;
+  background:rgba(6,4,2,.96);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-top:1px solid var(--veil);
+  padding:10px 16px calc(10px + var(--safe-bot)) 16px;
+  display:flex;justify-content:space-around;
+  max-width:560px;margin:0 auto;
+}
+.nav-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:6px;font-size:.62rem;font-weight:700;letter-spacing:.5px;
+  color:var(--mist);transition:color .2s;
+  position:relative;
+}
+.nav-btn.active{color:var(--ember)}
+.nav-btn .nav-icon{font-size:1.3rem;line-height:1}
+.nav-btn .nav-badge{
+  position:absolute;top:0;right:22%;
+  background:var(--fire);color:#fff;font-size:.55rem;font-weight:800;
+  min-width:18px;height:18px;border-radius:var(--r-full);padding:0 5px;
+  display:flex;align-items:center;justify-content:center;
+}
+
+/* ═══════════════════════════════════════════════════
+   ITEM DETAIL / CART / MODAL SHEETS
+   ═══════════════════════════════════════════════════ */
+.sheet-overlay{
+  position:fixed;inset:0;z-index:100;
+  background:rgba(0,0,0,.7);backdrop-filter:blur(8px);
+  display:none;align-items:flex-end;justify-content:center;
+}
+.sheet-overlay.show{display:flex;animation:fadeIn .25s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+.sheet{
+  background:var(--bg1);border-top:1px solid var(--veil);
+  border-radius:var(--r-xl) var(--r-xl) 0 0;
+  width:100%;max-width:560px;max-height:92vh;max-height:92dvh;
+  display:flex;flex-direction:column;
+  animation:slideUp .3s cubic-bezier(.34,1.4,.64,1);
+  padding-bottom:var(--safe-bot);
+}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+
+.sheet-handle{width:36px;height:4px;background:var(--veil);border-radius:2px;margin:10px auto 0;flex-shrink:0}
+.sheet-header{
+  padding:14px 20px 12px;display:flex;align-items:center;gap:10px;
+  border-bottom:1px solid var(--veil);flex-shrink:0;
+}
+.sheet-title{font-family:'Lora',serif;font-size:1.1rem;font-weight:600;flex:1;line-height:1.2}
+.sheet-close{
+  width:32px;height:32px;background:var(--bg3);border-radius:50%;
+  color:var(--mist);font-size:1rem;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+}
+.sheet-body{flex:1;overflow-y:auto;padding:18px 20px;-webkit-overflow-scrolling:touch}
+.sheet-footer{
+  padding:14px 20px;border-top:1px solid var(--veil);flex-shrink:0;
+  background:rgba(6,4,2,.8);backdrop-filter:blur(12px);
+}
+
+/* ── Item detail specific ── */
+.detail-hero{
+  background:linear-gradient(135deg,rgba(232,80,16,.1) 0%,rgba(200,124,28,.05) 100%);
+  border-radius:var(--r-lg);padding:20px;text-align:center;margin-bottom:18px;
+  border:1px solid var(--veil);
+}
+.detail-emoji{font-size:3.5rem;line-height:1;margin-bottom:10px}
+.detail-name{font-family:'Lora',serif;font-size:1.4rem;font-weight:600;margin-bottom:5px}
+.detail-desc{font-size:.82rem;color:var(--fog);line-height:1.5}
+.detail-price{
+  font-family:'Lora',serif;font-size:1.3rem;font-weight:600;color:var(--ember);
+  margin-top:10px;
+}
+
+.option-group{margin-bottom:8px;border:1.5px solid var(--veil);border-radius:var(--r);overflow:hidden}
+.option-group-header{
+  display:flex;align-items:center;gap:8px;padding:11px 14px;cursor:pointer;
+  background:var(--bg2);transition:background .15s;user-select:none;
+}
+.option-group-header:active{background:var(--bg3)}
+.option-group-title{font-size:.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--cream);flex:1}
+.option-group-req{font-size:.58rem;color:var(--red);font-weight:700;letter-spacing:.8px;
+  background:rgba(224,85,85,.1);padding:2px 6px;border-radius:4px}
+.option-group-selected{font-size:.7rem;color:var(--ember);font-style:italic;max-width:120px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.option-group-arrow{font-size:.7rem;color:var(--mist);transition:transform .2s;flex-shrink:0}
+.option-group.open .option-group-arrow{transform:rotate(180deg)}
+.option-group-body{display:none;padding:8px;background:var(--bg1);border-top:1px solid var(--veil)}
+.option-group.open .option-group-body{display:block}
+.option-group-note{font-size:.68rem;color:var(--mist);padding:0 4px 6px;font-style:italic}
+
+.option-btn{
+  width:100%;padding:12px 14px;margin-bottom:6px;
+  background:var(--bg2);border:1.5px solid var(--veil);border-radius:var(--r);
+  display:flex;align-items:center;justify-content:space-between;
+  text-align:left;font-size:.85rem;color:var(--cream);
+  transition:all .15s;
+}
+.option-btn.selected{border-color:var(--ember);background:var(--bg3);color:var(--ember)}
+.option-btn .opt-price{font-size:.75rem;color:var(--mist);font-weight:600}
+.option-btn.selected .opt-price{color:var(--ember)}
+.option-btn .check{
+  width:20px;height:20px;border-radius:50%;border:1.5px solid var(--veil);
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;
+}
+.option-btn.selected .check{background:var(--ember);border-color:var(--ember)}
+.option-btn.selected .check::after{content:'✓';color:#fff;font-size:.72rem;font-weight:700}
+.option-btn .left{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+
+.qty-row{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--bg2);border:1px solid var(--veil);border-radius:var(--r-lg);
+  padding:10px 14px;margin-bottom:14px;
+}
+.qty-label{font-size:.85rem;font-weight:600}
+.qty-controls{display:flex;align-items:center;gap:12px}
+.qty-btn{
+  width:34px;height:34px;border-radius:50%;background:var(--bg3);
+  border:1.5px solid var(--veil);color:var(--cream);font-size:1.2rem;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+}
+.qty-btn:active{background:var(--fire);border-color:var(--fire);color:#fff}
+.qty-val{font-family:'Lora',serif;font-size:1.2rem;font-weight:600;min-width:24px;text-align:center}
+
+.note-input{
+  width:100%;background:var(--bg3);border:1.5px solid var(--veil);border-radius:var(--r);
+  padding:12px 14px;color:var(--cream);font-size:.85rem;outline:none;
+  resize:none;min-height:60px;font-family:inherit;
+}
+.note-input:focus{border-color:rgba(232,80,16,.4)}
+
+/* Add to cart button in sheet footer */
+.add-cart-btn{
+  width:100%;display:flex;align-items:center;justify-content:space-between;
+  background:linear-gradient(135deg,var(--flame),var(--fire));
+  color:#fff;border-radius:var(--r-lg);padding:15px 18px;
+  font-weight:700;font-size:.9rem;box-shadow:0 6px 20px rgba(214,64,4,.3);
+}
+.add-cart-btn .price{font-family:'Lora',serif;font-size:1.05rem}
+
+/* ═══════════════════════════════════════════════════
+   CART
+   ═══════════════════════════════════════════════════ */
+.cart-item{
+  background:var(--bg2);border:1px solid var(--veil);border-radius:var(--r-lg);
+  padding:12px;margin-bottom:8px;display:flex;gap:12px;align-items:center;
+}
+.cart-item-emoji{font-size:1.8rem;width:44px;height:44px;
+  background:var(--bg3);border-radius:var(--r);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cart-item-info{flex:1;min-width:0}
+.cart-item-name{font-size:.85rem;font-weight:600}
+.cart-item-opts{font-size:.65rem;color:var(--mist);margin-top:3px;line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.cart-item-right{text-align:right;flex-shrink:0}
+.cart-item-price{font-family:'Lora',serif;font-size:.95rem;font-weight:600;color:var(--ember)}
+.cart-item-qty{display:flex;align-items:center;gap:6px;margin-top:6px;justify-content:flex-end}
+.cart-qty-btn{
+  width:24px;height:24px;border-radius:50%;background:var(--bg3);border:1px solid var(--veil);
+  color:var(--cream);font-size:.85rem;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+}
+.cart-qty-val{font-family:'Lora',serif;font-weight:600;min-width:16px;text-align:center;font-size:.85rem}
+
+.cart-summary{
+  background:var(--bg2);border:1px solid var(--veil);border-radius:var(--r-lg);
+  padding:16px;margin-top:14px;
+}
+.summary-row{display:flex;justify-content:space-between;padding:6px 0;font-size:.85rem}
+.summary-row.total{
+  padding-top:12px;margin-top:6px;border-top:1px solid var(--veil);
+  font-family:'Lora',serif;font-size:1.15rem;font-weight:600;
+}
+.summary-row.total .val{color:var(--ember)}
+.summary-row .lbl{color:var(--fog)}
+
+/* Payment options */
+.pay-grid{display:grid;grid-template-columns:1fr;gap:8px;margin-top:12px}
+.pay-btn{
+  display:flex;align-items:center;gap:12px;padding:14px;
+  background:var(--bg2);border:1.5px solid var(--veil);border-radius:var(--r-lg);
+  text-align:left;transition:all .15s;
+}
+.pay-btn.selected{border-color:var(--ember);background:var(--bg3)}
+.pay-btn.disabled{opacity:.4;pointer-events:none}
+.pay-icon{font-size:1.3rem;width:36px;text-align:center}
+.pay-info{flex:1}
+.pay-name{font-size:.88rem;font-weight:600}
+.pay-desc{font-size:.68rem;color:var(--mist);margin-top:2px}
+.pay-check{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--veil);display:flex;align-items:center;justify-content:center}
+.pay-btn.selected .pay-check{background:var(--ember);border-color:var(--ember)}
+.pay-btn.selected .pay-check::after{content:'✓';color:#fff;font-size:.72rem;font-weight:700}
+
+/* Empty cart */
+.empty-cart{text-align:center;padding:60px 20px;display:flex;flex-direction:column;align-items:center;gap:10px}
+.empty-cart .ico{font-size:3.5rem;opacity:.4}
+.empty-cart .txt{font-size:.9rem;color:var(--mist)}
+
+/* ═══════════════════════════════════════════════════
+   PROFILE / ORDERS / ADDRESSES
+   ═══════════════════════════════════════════════════ */
+.profile-card{
+  background:var(--bg2);border:1px solid var(--veil);border-radius:var(--r-lg);
+  padding:20px;margin-bottom:16px;display:flex;align-items:center;gap:14px;
+}
+.profile-avatar{
+  width:60px;height:60px;background:var(--bg3);border:1px solid var(--veil);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:1.8rem;flex-shrink:0;
+}
+.profile-info{flex:1}
+.profile-name{font-family:'Lora',serif;font-size:1.1rem;font-weight:600}
+.profile-phone{font-size:.78rem;color:var(--mist);margin-top:3px}
+
+.profile-section{margin-bottom:20px}
+.ps-title{
+  font-size:.7rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--mist);margin-bottom:10px;
+}
+.profile-row{
+  background:var(--bg2);border:1px solid var(--veil);border-radius:var(--r-lg);
+  padding:14px 16px;margin-bottom:6px;display:flex;align-items:center;gap:12px;
+}
+.pr-icon{font-size:1.2rem;width:28px;text-align:center;flex-shrink:0}
+.pr-label{flex:1;font-size:.88rem}
+.pr-arrow{color:var(--mist);font-size:1.1rem}
+
+.order-list-item{
+  background:var(--bg2);border:1px solid var(--veil);border-radius:var(--r-lg);
+  padding:14px;margin-bottom:8px;position:relative;overflow:hidden;
+}
+.order-list-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}
+.order-list-item.pending::before{background:var(--amber)}
+.order-list-item.confirmed::before{background:var(--flame)}
+.order-list-item.delivered::before{background:var(--green)}
+.order-list-item.cancelled::before{background:var(--red)}
+.ol-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+.ol-id{font-family:'Lora',serif;font-size:.92rem;font-weight:600}
+.ol-date{font-size:.65rem;color:var(--mist);margin-top:2px}
+.ol-status{font-size:.58rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:var(--r-full)}
+.ol-status.pending{background:rgba(220,180,48,.12);color:var(--amber)}
+.ol-status.confirmed{background:rgba(232,80,16,.12);color:var(--ember)}
+.ol-status.delivered{background:rgba(76,175,80,.12);color:var(--green)}
+.ol-status.cancelled{background:rgba(224,85,85,.12);color:var(--red)}
+.ol-items{font-size:.72rem;color:var(--fog);line-height:1.6;margin-bottom:8px}
+.ol-bottom{display:flex;justify-content:space-between;align-items:center}
+.ol-total{font-family:'Lora',serif;font-size:1rem;font-weight:600;color:var(--ember)}
+.ol-pay{font-size:.66rem;color:var(--mist)}
+
+/* Addresses */
+.addr-card{
+  background:var(--bg2);border:1px solid var(--veil);border-radius:var(--r-lg);
+  padding:14px;margin-bottom:8px;
+}
+.addr-card.default{border-color:rgba(232,80,16,.3)}
+.addr-top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.addr-title{font-size:.88rem;font-weight:600}
+.addr-default-badge{
+  font-size:.55rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;
+  background:rgba(232,80,16,.15);color:var(--ember);padding:2px 8px;border-radius:var(--r-full);
+}
+.addr-text{font-size:.74rem;color:var(--fog);line-height:1.45}
+.addr-note{font-size:.66rem;color:var(--amber);margin-top:5px;font-style:italic}
+.addr-actions{display:flex;gap:8px;margin-top:10px}
+.addr-btn{
+  flex:1;padding:7px;font-size:.7rem;font-weight:600;
+  background:var(--bg3);border:1px solid var(--veil);border-radius:var(--r);color:var(--cream);
+}
+.addr-btn.danger{color:var(--red)}
+
+/* ═══════════════════════════════════════════════════
+   CLOSED MODAL (pop-up)
+   ═══════════════════════════════════════════════════ */
+#closedModal{
+  position:fixed;inset:0;z-index:200;
+  background:rgba(0,0,0,.85);backdrop-filter:blur(14px);
+  display:none;align-items:center;justify-content:center;padding:24px;
+}
+#closedModal.show{display:flex;animation:fadeIn .3s}
+.closed-box{
+  background:var(--bg1);border:1px solid rgba(224,85,85,.3);border-radius:var(--r-xl);
+  padding:32px 24px;max-width:360px;width:100%;text-align:center;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);
+}
+.closed-ico{font-size:3.5rem;margin-bottom:12px}
+.closed-title{font-family:'Lora',serif;font-size:1.4rem;font-weight:600;margin-bottom:10px}
+.closed-title em{font-style:italic;color:var(--red)}
+.closed-desc{font-size:.85rem;color:var(--fog);line-height:1.6;margin-bottom:16px}
+.closed-hours{
+  background:var(--bg3);border:1px solid var(--veil);border-radius:var(--r);
+  padding:10px;font-size:.78rem;color:var(--cream);margin-bottom:20px;
+}
+.closed-hours strong{color:var(--ember);font-family:'Lora',serif}
+.closed-btn{
+  width:100%;padding:13px;background:var(--veil);color:var(--cream);
+  border-radius:var(--r-lg);font-weight:700;font-size:.85rem;
+}
+
+/* ═══════════════════════════════════════════════════
+   TOAST
+   ═══════════════════════════════════════════════════ */
+#toast{
+  position:fixed;bottom:calc(90px + var(--safe-bot));left:16px;right:16px;
+  max-width:420px;margin:0 auto;z-index:500;
+  background:rgba(22,14,6,.98);backdrop-filter:blur(20px);
+  border:1px solid var(--veil);border-radius:var(--r-lg);
+  padding:12px 16px;display:flex;align-items:center;gap:10px;
+  transform:translateY(24px);opacity:0;pointer-events:none;
+  transition:transform .3s cubic-bezier(.34,1.5,.64,1),opacity .3s;
+}
+#toast.show{transform:translateY(0);opacity:1}
+.toast-ico{font-size:1.15rem;flex-shrink:0}
+.toast-txt{font-size:.82rem;font-weight:600;flex:1}
+
+/* Empty states */
+.empty-state{text-align:center;padding:60px 20px;display:flex;flex-direction:column;align-items:center;gap:10px}
+.empty-state .ico{font-size:3.5rem;opacity:.3}
+.empty-state .txt{font-size:.88rem;color:var(--mist)}
+
+/* Loading skeleton */
+.skel{background:linear-gradient(90deg,var(--bg2) 0%,var(--bg3) 50%,var(--bg2) 100%);
+  background-size:200% 100%;animation:skel 1.4s infinite;border-radius:var(--r)}
+@keyframes skel{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* Address form */
+.addr-form{display:flex;flex-direction:column;gap:12px}
+</style>
+</head>
+<body>
+
+<!-- ═══ LOADING SCREEN ═══ -->
+<div id="loadingScreen" class="screen active">
+  <div class="loading-brand">Bi' <em>Kokoreç</em></div>
+</div>
+
+<!-- ═══ AUTH SCREEN ═══ -->
+<div id="authScreen" class="screen">
+  <div class="auth-inner">
+    <div class="brand-big">
+      <div class="top-text">Balıkesir · Dumlupınar</div>
+      <h1>Bi' <em>Kokoreç</em></h1>
+      <div class="tagline">Sokak lezzeti</div>
+    </div>
+    </div>
+
+    <!-- Phone entry -->
+    <div class="auth-card" id="phoneCard">
+      <h2>Telefonunla giriş yap</h2>
+      <p class="sub">Seni tanıyabilmemiz için telefon numaranı onaylayacağız. Güvenliğin için tek kullanımlık kod göndereceğiz.</p>
+
+      <div class="field">
+        <div class="field-label">Ad Soyad</div>
+        <input type="text" class="input-field" id="authName" placeholder="Örn: Ahmet Yılmaz" autocomplete="name">
+      </div>
+
+      <div class="field">
+        <div class="field-label">Telefon Numarası</div>
+        <div class="phone-wrap">
+          <div class="phone-prefix">+90</div>
+          <input type="tel" class="input-field" id="authPhone" placeholder="5XX XXX XX XX" inputmode="numeric" maxlength="13" autocomplete="tel-national">
+        </div>
+      </div>
+
+      <label class="checkbox-row" id="kvkkRow">
+        <div class="checkbox" id="kvkkBox"></div>
+        <div class="checkbox-label">
+          <a href="#" id="openKvkk">KVKK Aydınlatma Metni</a>'ni okudum ve <strong>kişisel verilerimin işlenmesini</strong> kabul ediyorum.
+        </div>
+      </label>
+
+      <label class="checkbox-row" id="ticariRow">
+        <div class="checkbox" id="ticariBox"></div>
+        <div class="checkbox-label">
+          Kampanya ve fırsatlardan <strong>SMS ile haberdar olmak istiyorum</strong> (opsiyonel).
+        </div>
+      </label>
+
+      <button class="btn-primary" id="sendOtpBtn">Kod Gönder</button>
+    </div>
+
+    <!-- OTP entry -->
+    <div class="auth-card" id="otpCard" style="display:none">
+      <h2>Kodu Gir</h2>
+      <p class="sub"><strong id="otpPhoneDisplay">—</strong> numarasına gönderilen 6 haneli kodu gir.</p>
+
+      <div class="otp-grid" id="otpGrid"></div>
+
+      <div class="otp-timer" id="otpTimer">Yeni kod isteyebilmek için <strong id="otpCountdown">60</strong> sn</div>
+
+      <button class="btn-primary" id="verifyBtn" disabled>Doğrula</button>
+      <button class="btn-text" id="resendBtn" disabled>Kodu Yeniden Gönder</button>
+      <button class="btn-text" id="changePhoneBtn">← Numarayı Değiştir</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MAIN APP SCREEN ═══ -->
+<div id="mainScreen" class="screen">
+  <div class="top-header">
+    <div class="header-brand">Bi' <em>Kokoreç</em></div>
+    <div class="header-actions">
+      <div class="status-pill" id="statusPill">—</div>
+    </div>
+  </div>
+
+  <div class="main-content" id="mainContent"></div>
+
+  <div class="bottom-nav">
+    <button class="nav-btn active" data-tab="menu">
+      <span class="nav-icon">🍽️</span>
+      <span>Menü</span>
+    </button>
+    <button class="nav-btn" data-tab="cart">
+      <span class="nav-icon">🛒</span>
+      <span>Sepet</span>
+      <span class="nav-badge" id="cartBadge" style="display:none">0</span>
+    </button>
+    <button class="nav-btn" data-tab="orders">
+      <span class="nav-icon">📦</span>
+      <span>Siparişler</span>
+    </button>
+    <button class="nav-btn" data-tab="profile">
+      <span class="nav-icon">👤</span>
+      <span>Profil</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══ ITEM DETAIL SHEET ═══ -->
+<div class="sheet-overlay" id="itemSheet">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title" id="itemSheetTitle">Ürün</div>
+      <button class="sheet-close" id="itemSheetClose">✕</button>
+    </div>
+    <div class="sheet-body" id="itemSheetBody"></div>
+    <div class="sheet-footer" id="itemSheetFooter"></div>
+  </div>
+</div>
+
+<!-- ═══ ADDRESS SHEET ═══ -->
+<div class="sheet-overlay" id="addrSheet">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title" id="addrSheetTitle">Adres</div>
+      <button class="sheet-close" id="addrSheetClose">✕</button>
+    </div>
+    <div class="sheet-body" id="addrSheetBody"></div>
+    <div class="sheet-footer" id="addrSheetFooter"></div>
+  </div>
+</div>
+
+<!-- ═══ GENERIC INFO SHEET (KVKK, terms, etc.) ═══ -->
+<div class="sheet-overlay" id="infoSheet">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title" id="infoSheetTitle">Bilgi</div>
+      <button class="sheet-close" id="infoSheetClose">✕</button>
+    </div>
+    <div class="sheet-body" id="infoSheetBody" style="font-size:.85rem;line-height:1.65;color:var(--fog)"></div>
+  </div>
+</div>
+
+<!-- ═══ CLOSED MODAL ═══ -->
+<div id="closedModal">
+  <div class="closed-box">
+    <div class="closed-ico">🌙</div>
+    <div class="closed-title">Bi' <em>Kokoreç</em> şu an kapalı</div>
+    <div class="closed-desc">Üzgünüz, şu anda sipariş alamıyoruz. Açık olduğumuz saatlerde tekrar görüşelim.</div>
+    <div class="closed-hours" id="closedHoursBox">—</div>
+    <button class="closed-btn" id="closedOk">Anladım</button>
+  </div>
+</div>
+
+<!-- ═══ TOAST ═══ -->
+<div id="toast"><span class="toast-ico" id="toastIco">✅</span><span class="toast-txt" id="toastTxt">—</span></div>
+
+<!-- Confirm Modal -->
+<div id="confirmModal" style="position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;padding:24px">
+  <div style="background:#141008;border:1px solid rgba(240,224,192,.1);border-radius:20px;padding:24px;width:100%;max-width:340px">
+    <div id="confirmModalTitle" style="font-family:'Lora',serif;font-size:1.1rem;font-weight:600;color:#e05555;margin-bottom:10px"></div>
+    <div id="confirmModalText" style="font-size:.82rem;color:rgba(240,224,192,.65);line-height:1.5;margin-bottom:18px"></div>
+    <div style="display:flex;gap:10px">
+      <button id="confirmModalCancel" style="flex:1;padding:12px;border:none;border-radius:12px;background:#1C150A;color:#F0E0C0;font-family:'Syne',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer">İptal</button>
+      <button id="confirmModalOK" style="flex:1;padding:12px;border:none;border-radius:12px;background:linear-gradient(135deg,#d03030,#a01010);color:#fff;font-family:'Syne',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer">Evet, Sil</button>
+    </div>
+  </div>
+</div>
+
+</body>
+<script>
+
+/* ═══════════════════════════════════════════════════
+   Bi' Kokoreç — Müşteri Uygulaması
+   ═══════════════════════════════════════════════════ */
+
+// Backend adresi — hem localhost hem canlı desteği
+const API = (function() {
+  const h = window.location.hostname;
+  if (h === 'localhost' || h === '127.0.0.1') return 'http://localhost:3000';
+  if (h === 'api.bikokorec.com.tr') return '';            // backend'i de aynı domain'de servis ediyorsa
+  return 'https://api.bikokorec.com.tr';                  // varsayılan canlı
+})();
+
+/* ═══ GLOBAL STATE ═══ */
+const state = {
+  token:    localStorage.getItem('bk_token') || null,
+  customer: JSON.parse(localStorage.getItem('bk_customer') || 'null'),
+  menu:     null,
+  business: null,
+  hours:    null,
+  cashDisabled: false,
+  cart:     JSON.parse(localStorage.getItem('bk_cart') || '[]'),
+  addresses:[],
+  currentTab: 'menu',
+  activeCategory: null,
+  otp: { phone: null, timerInterval: null, countdown: 60 },
+};
+
+const DAY_KEYS   = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+const DAY_LABELS = { monday:'Pazartesi', tuesday:'Salı', wednesday:'Çarşamba', thursday:'Perşembe', friday:'Cuma', saturday:'Cumartesi', sunday:'Pazar' };
+
+/* ═══ API HELPER ═══ */
+async function api(path, method='GET', body=null) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (state.token) opts.headers['Authorization'] = 'Bearer ' + state.token;
+  if (body) opts.body = JSON.stringify(body);
+
+  const res = await fetch(API + path, opts);
+  const data = await res.json().catch(() => ({}));
+
+  if (res.status === 401 && state.token) {
+    // Token expired or invalid
+    logout();
+    throw new Error('Oturum süresi doldu, lütfen tekrar giriş yap');
+  }
+  if (!res.ok) throw new Error(data.error || 'Bir sorun oluştu');
+  return data;
+}
+
+/* ═══ TOAST ═══ */
+let toastTimer;
+function toast(ico, txt) {
+  clearTimeout(toastTimer);
+  document.getElementById('toastIco').textContent = ico;
+  document.getElementById('toastTxt').textContent = txt;
+  const el = document.getElementById('toast');
+  el.classList.remove('show');
+  void el.offsetWidth;
+  el.classList.add('show');
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+/* ═══ SCREENS ═══ */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('active');
+    s.style.display = 'none';
+  });
+  const target = document.getElementById(id);
+  target.style.display = 'flex';
+  target.classList.add('active');
+  if (id !== 'loadingScreen') {
+    const ls = document.getElementById('loadingScreen');
+    if (ls) ls.style.display = 'none';
+  }
+}
+
+
+/* ═══ HELPERS ═══ */
+function fmtDate(str) {
+  if (!str) return '';
+  return str.slice(0,16).replace('T',' ');
+}
+function cartTotal() {
+  return state.cart.reduce((sum, item) => sum + item.total * item.qty, 0);
+}
+function cartCount() {
+  return state.cart.reduce((sum, item) => sum + item.qty, 0);
+}
+function saveCart() {
+  localStorage.setItem('bk_cart', JSON.stringify(state.cart));
+  updateCartBadge();
+}
+function updateCartBadge() {
+  const badge = document.getElementById('cartBadge');
+  const count = cartCount();
+  if (count > 0) { badge.textContent = count; badge.style.display = 'flex'; }
+  else badge.style.display = 'none';
+}
+
+/* ═══════════════════════════════════════════════════
+   CLOSED HOURS LOGIC
+═══════════════════════════════════════════════════ */
+function isOpen() {
+  if (!state.hours) return true;
+  const now          = new Date();
+  const cur          = now.getHours() * 60 + now.getMinutes();
+  const todayIdx     = now.getDay();
+  const yesterdayIdx = (todayIdx + 6) % 7;
+
+  const mins = (t) => { const [h,m] = t.split(':').map(Number); return h*60+m; };
+
+  // 1. Bugünün vardiyası
+  const todayH = state.hours[DAY_KEYS[todayIdx]];
+  if (todayH && !todayH.closed) {
+    const openMin  = mins(todayH.open);
+    const closeMin = mins(todayH.close);
+    if (closeMin > openMin) {
+      // Normal vardiya
+      if (cur >= openMin && cur < closeMin) return true;
+    } else {
+      // Gece yarısını geçen vardiya — bugün başlayan kısım
+      if (cur >= openMin) return true;
+    }
+  }
+
+  // 2. Dünkü gece yarısını geçen vardiya bugün devam ediyor mu?
+  const yH = state.hours[DAY_KEYS[yesterdayIdx]];
+  if (yH && !yH.closed) {
+    const openMin  = mins(yH.open);
+    const closeMin = mins(yH.close);
+    if (closeMin < openMin && cur < closeMin) return true;
+  }
+
+  return false;
+}
+
+function getTodayHoursText() {
+  if (!state.hours) return '';
+  const dayKey = DAY_KEYS[new Date().getDay()];
+  const h = state.hours[dayKey];
+  if (!h) return '';
+  if (h.closed) return `Bugün (${DAY_LABELS[dayKey]}) kapalı`;
+  return `Bugün açık: ${h.open} – ${h.close}`;
+}
+
+function getAllHoursText() {
+  if (!state.hours) return '';
+  return DAY_KEYS.slice(1).concat(['sunday']).map(k => {
+    const h = state.hours[k];
+    if (!h) return '';
+    return h.closed
+      ? DAY_LABELS[k] + ': Kapalı'
+      : DAY_LABELS[k] + ': ' + h.open + ' – ' + h.close;
+  }).join('\n');
+}
+
+function checkClosedModal() {
+  if (!isOpen()) {
+    document.getElementById('closedHoursBox').innerHTML = getAllHoursText().split('\n').join('<br>');
+    document.getElementById('closedModal').classList.add('show');
+    return true;
+  }
+  return false;
+}
+
+/* ═══════════════════════════════════════════════════
+   AUTH FLOW
+═══════════════════════════════════════════════════ */
+
+// Phone input formatting
+function formatPhone(val) {
+  const digits = val.replace(/\D/g, '').slice(0, 10);
+  let out = '';
+  if (digits.length > 0) out = digits.slice(0, 3);
+  if (digits.length > 3) out += ' ' + digits.slice(3, 6);
+  if (digits.length > 6) out += ' ' + digits.slice(6, 8);
+  if (digits.length > 8) out += ' ' + digits.slice(8, 10);
+  return out;
+}
+
+function initAuthScreen() {
+  // Phone formatting
+  document.getElementById('authPhone').addEventListener('input', function(e) {
+    const cursor = e.target.selectionStart;
+    e.target.value = formatPhone(e.target.value);
+  });
+
+  // KVKK checkbox
+  const kvkkBox = document.getElementById('kvkkBox');
+  document.getElementById('kvkkRow').addEventListener('click', function(e) {
+    if (e.target.tagName === 'A') return;
+    kvkkBox.classList.toggle('checked');
+  });
+
+  // Ticari checkbox
+  const ticariBox = document.getElementById('ticariBox');
+  document.getElementById('ticariRow').addEventListener('click', () => {
+    ticariBox.classList.toggle('checked');
+  });
+
+  // KVKK link
+  document.getElementById('openKvkk').addEventListener('click', function(e) {
+    e.preventDefault();
+    showInfo('KVKK Aydınlatma Metni', 'Kişisel verileriniz yalnızca sipariş süreçleri, iletişim ve (onay vermeniz halinde) kampanya bilgilendirmesi için işlenir. Verileriniz üçüncü kişilerle paylaşılmaz. Detaylı aydınlatma metni için işletme ile iletişime geçiniz.\n\n6698 sayılı KVKK kapsamında haklarınız:\n\n• Verilerinizin işlenip işlenmediğini öğrenme\n• İşlenme amacını öğrenme\n• Düzeltme veya silme talep etme\n• Pazarlama için kullanımına itiraz etme');
+  });
+
+  // Send OTP
+  document.getElementById('sendOtpBtn').addEventListener('click', sendOTP);
+
+  // OTP controls
+  buildOTPInputs();
+  document.getElementById('verifyBtn').addEventListener('click', verifyOTP);
+  document.getElementById('resendBtn').addEventListener('click', sendOTP);
+  document.getElementById('changePhoneBtn').addEventListener('click', () => {
+    clearInterval(state.otp.timerInterval);
+    document.getElementById('otpCard').style.display = 'none';
+    document.getElementById('phoneCard').style.display = 'flex';
+  });
+}
+
+function buildOTPInputs() {
+  const grid = document.getElementById('otpGrid');
+  grid.innerHTML = '';
+  for (let i = 0; i < 6; i++) {
+    const inp = document.createElement('input');
+    inp.type = 'tel';
+    inp.maxLength = 1;
+    inp.className = 'otp-input';
+    inp.inputMode = 'numeric';
+    inp.pattern = '[0-9]*';
+    inp.addEventListener('input', function(e) {
+      const v = e.target.value.replace(/\D/g, '').slice(0, 1);
+      e.target.value = v;
+      if (v) {
+        e.target.classList.add('filled');
+        if (i < 5) grid.children[i + 1].focus();
+      } else {
+        e.target.classList.remove('filled');
+      }
+      updateVerifyBtn();
+    });
+    inp.addEventListener('keydown', function(e) {
+      if (e.key === 'Backspace' && !e.target.value && i > 0) {
+        grid.children[i - 1].focus();
+      }
+    });
+    inp.addEventListener('paste', function(e) {
+      e.preventDefault();
+      const paste = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 6);
+      for (let j = 0; j < paste.length; j++) {
+        if (grid.children[j]) {
+          grid.children[j].value = paste[j];
+          grid.children[j].classList.add('filled');
+        }
+      }
+      if (paste.length === 6) verifyOTP();
+      updateVerifyBtn();
+    });
+    grid.appendChild(inp);
+  }
+}
+
+function getOTPValue() {
+  return Array.from(document.querySelectorAll('.otp-input')).map(i => i.value).join('');
+}
+
+function updateVerifyBtn() {
+  document.getElementById('verifyBtn').disabled = getOTPValue().length !== 6;
+}
+
+async function sendOTP() {
+  const name  = document.getElementById('authName').value.trim();
+  const phone = document.getElementById('authPhone').value.replace(/\s/g, '');
+
+  // Validation
+  if (!name || name.length < 2) return toast('⚠️', 'Lütfen adınızı giriniz');
+  if (!/^5\d{9}$/.test(phone)) return toast('⚠️', 'Geçerli bir telefon numarası giriniz');
+  if (!document.getElementById('kvkkBox').classList.contains('checked')) {
+    return toast('⚠️', 'KVKK onayı zorunludur');
+  }
+
+  const btn = document.getElementById('sendOtpBtn');
+  const origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Gönderiliyor…';
+
+  try {
+    await api('/auth/send-otp', 'POST', { phone });
+    state.otp.phone = phone;
+    // Show OTP card
+    document.getElementById('phoneCard').style.display = 'none';
+    document.getElementById('otpCard').style.display = 'flex';
+    document.getElementById('otpPhoneDisplay').textContent = '+90 ' + formatPhone(phone);
+    document.querySelectorAll('.otp-input').forEach(i => { i.value = ''; i.classList.remove('filled'); });
+    document.querySelectorAll('.otp-input')[0].focus();
+    startOTPTimer();
+    toast('✅', 'Kod gönderildi');
+  } catch (e) {
+    toast('❌', e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = origText;
+  }
+}
+
+function startOTPTimer() {
+  clearInterval(state.otp.timerInterval);
+  state.otp.countdown = 60;
+  document.getElementById('resendBtn').disabled = true;
+  document.getElementById('otpCountdown').textContent = '60';
+  document.getElementById('otpTimer').style.display = 'block';
+
+  state.otp.timerInterval = setInterval(() => {
+    state.otp.countdown--;
+    document.getElementById('otpCountdown').textContent = state.otp.countdown;
+    if (state.otp.countdown <= 0) {
+      clearInterval(state.otp.timerInterval);
+      document.getElementById('otpTimer').style.display = 'none';
+      document.getElementById('resendBtn').disabled = false;
+    }
+  }, 1000);
+}
+
+async function verifyOTP() {
+  const code = getOTPValue();
+  if (code.length !== 6) return;
+
+  const btn = document.getElementById('verifyBtn');
+  btn.disabled = true;
+  btn.textContent = 'Doğrulanıyor…';
+
+  try {
+    const name   = document.getElementById('authName').value.trim();
+    const kvkk   = document.getElementById('kvkkBox').classList.contains('checked');
+    const ticari = document.getElementById('ticariBox').classList.contains('checked');
+
+    const data = await api('/auth/verify-otp', 'POST', {
+      phone: state.otp.phone, code, name, kvkk, ticari
+    });
+
+    state.token    = data.token;
+    state.customer = data.customer;
+    localStorage.setItem('bk_token', data.token);
+    localStorage.setItem('bk_customer', JSON.stringify(data.customer));
+
+    clearInterval(state.otp.timerInterval);
+    toast('✅', 'Hoş geldin ' + (data.customer.name || ''));
+    await enterApp();
+  } catch (e) {
+    toast('❌', e.message);
+    btn.disabled = false;
+    document.querySelectorAll('.otp-input').forEach(i => { i.value=''; i.classList.remove('filled'); });
+    document.querySelectorAll('.otp-input')[0].focus();
+  } finally {
+    btn.textContent = 'Doğrula';
+  }
+}
+
+let _confirmCb = null;
+function confirmAction(title, text, callback) {
+  _confirmCb = callback;
+  document.getElementById('confirmModalTitle').textContent = title;
+  document.getElementById('confirmModalText').textContent  = text;
+  const m = document.getElementById('confirmModal');
+  m.style.display = 'flex';
+}
+function closeConfirm() {
+  document.getElementById('confirmModal').style.display = 'none';
+  _confirmCb = null;
+}
+
+function logout() {
+  state.token = null;
+  state.customer = null;
+  state.cart = [];
+  state.addresses = [];
+  localStorage.removeItem('bk_token');
+  localStorage.removeItem('bk_customer');
+  localStorage.removeItem('bk_cart');
+  showScreen('authScreen');
+  document.getElementById('phoneCard').style.display = 'flex';
+  document.getElementById('otpCard').style.display   = 'none';
+  document.getElementById('authPhone').value = '';
+  document.getElementById('authName').value  = '';
+}
+
+/* ═══════════════════════════════════════════════════
+   ENTER APP
+═══════════════════════════════════════════════════ */
+async function enterApp() {
+  try {
+    // Load menu (public)
+    const menu = await api('/menu');
+    state.menu     = menu;
+    state.business = menu.business;
+    state.hours    = menu.business?.working_hours || null;
+
+    // Try to fetch private profile (cash_payment_disabled flag)
+    if (state.token) {
+      try {
+        const me = await api('/customers/me');
+        state.customer = { ...state.customer, ...me };
+        // Profile doesn't return cash_payment_disabled yet — we'll just assume payment options from customer row
+      } catch(e) {
+        if (e.message.includes('Oturum')) return; // logged out already
+      }
+    }
+
+    showScreen('mainScreen');
+    updateStatus();
+    renderTab('menu');
+    updateCartBadge();
+    checkClosedModal();
+
+    // Check open status every minute
+    setInterval(updateStatus, 60000);
+
+    // Start polling for order status changes
+    startOrderPolling();
+  } catch (e) {
+    toast('❌', 'Menü yüklenemedi: ' + e.message);
+  }
+}
+
+function updateStatus() {
+  const pill = document.getElementById('statusPill');
+  if (isOpen()) {
+    pill.className = 'status-pill open';
+    pill.textContent = '● AÇIK';
+  } else {
+    pill.className = 'status-pill closed';
+    pill.textContent = '● KAPALI';
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   TABS
+═══════════════════════════════════════════════════ */
+function renderTab(tab) {
+  state.currentTab = tab;
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.tab === tab);
+  });
+  const content = document.getElementById('mainContent');
+  if (tab === 'menu')     renderMenu(content);
+  if (tab === 'cart')     renderCart(content);
+  if (tab === 'orders')   renderOrders(content);
+  if (tab === 'profile')  renderProfile(content);
+}
+
+/* ═══════════════════════════════════════════════════
+   MENU TAB
+═══════════════════════════════════════════════════ */
+function renderMenu(container) {
+  if (!state.menu) return;
+  const cats = state.menu.categories || [];
+  if (!state.activeCategory) state.activeCategory = cats[0]?.key;
+
+  const hero = `
+    <div class="hero">
+      <div class="hero-greeting">${state.customer?.name ? 'Hoş geldin' : 'Merhaba'}</div>
+      <div class="hero-name">${state.customer?.name || 'Misafir'}<em>${state.customer?.name ? '' : ''}</em></div>
+      <div class="hero-hours">${getTodayHoursText()}</div>
+    </div>`;
+
+  const chips = `
+    <div class="cat-scroll">
+      ${cats.map(c => `
+        <button class="cat-chip ${c.key === state.activeCategory ? 'active' : ''}" data-cat="${c.key}">
+          <span>${c.emoji}</span>${c.label}
+        </button>
+      `).join('')}
+    </div>`;
+
+  const activeCat = cats.find(c => c.key === state.activeCategory) || cats[0];
+  const items = (activeCat?.items || []).map(item => `
+    <div class="item-card" data-item-id="${item.id}">
+      <div class="item-emoji">${item.emoji}</div>
+      <div class="item-info">
+        <div class="item-name">${item.name}</div>
+        <div class="item-desc">${(item.description && !item.description.startsWith("items:")) ? item.description : ""}</div>
+        <div class="item-price-row">
+          <div class="item-price">${item.base_price} ₺</div>
+          <button class="item-add">+</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  container.innerHTML = hero + chips + `
+    <div class="menu-section">
+      <div class="section-title"><span class="emoji">${activeCat?.emoji}</span>${activeCat?.label}</div>
+      ${items || '<div class="empty-state"><div class="ico">🍽️</div><div class="txt">Bu kategoride ürün yok</div></div>'}
+    </div>`;
+
+  // Category chip click
+  container.querySelectorAll('.cat-chip').forEach(chip => {
+    chip.addEventListener('click', function() {
+      state.activeCategory = this.dataset.cat;
+      renderMenu(container);
+    });
+  });
+
+  // Item click → detail sheet
+  container.querySelectorAll('.item-card').forEach(card => {
+    card.addEventListener('click', function() {
+      openItemDetail(parseInt(this.dataset.itemId));
+    });
+  });
+}
+
+/* ═══════════════════════════════════════════════════
+   ITEM DETAIL SHEET
+═══════════════════════════════════════════════════ */
+const sheetState = { item: null, selections: {}, qty: 1, note: '' };
+
+function findItem(id) {
+  for (const cat of (state.menu?.categories || [])) {
+    const f = cat.items.find(i => i.id === id);
+    if (f) return f;
+  }
+  return null;
+}
+
+function getOptionPrice(item, groupKey, optionKey) {
+  const group = state.menu.option_groups[groupKey];
+  if (!group) return 0;
+  const opt = group.options.find(o => o.key === optionKey);
+  if (!opt) return 0;
+  // Check per-item override
+  const override = item.price_overrides?.[groupKey]?.[optionKey];
+  return override !== undefined ? override : opt.price_modifier;
+}
+
+function calcItemPrice(item, selections) {
+  let total = item.base_price;
+  for (const [groupKey, sel] of Object.entries(selections || {})) {
+    if (Array.isArray(sel)) {
+      sel.forEach(optKey => total += getOptionPrice(item, groupKey, optKey));
+    } else if (sel) {
+      total += getOptionPrice(item, groupKey, sel);
+    }
+  }
+  return Math.max(0, total);
+}
+
+function openItemDetail(itemId) {
+  const item = findItem(itemId);
+  if (!item) return;
+
+  sheetState.item = item;
+  sheetState.selections = {};
+  sheetState.qty = 1;
+  sheetState.note = '';
+  sheetState.openGroups = new Set();
+
+  // Parse item count for menu items
+  // Primary: description = "items:N"
+  // Fallback: parse from name "2 Yarım Kokoreç" → 2
+  let itemCount = 1;
+  if (item.description && item.description.startsWith('items:')) {
+    itemCount = parseInt(item.description.split(':')[1]) || 1;
+  } else if (item.name) {
+    const nameMatch = item.name.match(/^([2-9])/);
+    if (nameMatch) itemCount = parseInt(nameMatch[1]);
+  }
+  sheetState.itemCount = itemCount;
+
+  // Default selections — keep groups closed (accordion)
+  (item.option_groups || []).forEach(gKey => {
+    const g = state.menu.option_groups[gKey];
+    // For menu items with multiple pieces, create indexed selections per item
+    if (itemCount > 1 && !gKey.startsWith('icecek_')) {
+      for (let i = 1; i <= itemCount; i++) {
+        const indexedKey = gKey + '__' + i;
+        if (g?.type === 'single') sheetState.selections[indexedKey] = null;
+        else if (g?.type === 'multi') sheetState.selections[indexedKey] = [];
+      }
+    } else {
+      if (g?.type === 'single') sheetState.selections[gKey] = null;
+      else if (g?.type === 'multi') sheetState.selections[gKey] = [];
+    }
+  });
+
+  renderItemSheet();
+  document.getElementById('itemSheetTitle').textContent = item.name;
+  document.getElementById('itemSheet').classList.add('show');
+  document.body.classList.add('no-scroll');
+}
+
+function renderItemSheet() {
+  const item = sheetState.item;
+  if (!item) return;
+
+  let html = `
+    <div class="detail-hero">
+      <div class="detail-emoji">${item.emoji}</div>
+      <div class="detail-name">${item.name}</div>
+      <div class="detail-desc">${(item.description && !item.description.startsWith("items:")) ? item.description : ""}</div>
+      <div class="detail-price">${item.base_price} ₺</div>
+    </div>`;
+
+  // Option groups — for menu items group per ekmek
+  const itemCount = sheetState.itemCount || 1;
+  const ITEM_LABELS = ['1. Ekmek','2. Ekmek','3. Ekmek','4. Ekmek'];
+
+  if (itemCount > 1) {
+    // Multi-item menu: show one accordion per item containing food options
+    // then içecek accordions separately
+    const foodGroups  = (item.option_groups||[]).filter(gk => !gk.startsWith('icecek_'));
+    const drinkGroups = (item.option_groups||[]).filter(gk => gk.startsWith('icecek_'));
+
+    for (let itemIdx = 1; itemIdx <= itemCount; itemIdx++) {
+      const itemKey = 'item__' + itemIdx;
+      const isOpen  = sheetState.openGroups && sheetState.openGroups.has(itemKey);
+
+      // Build preview of selections for this item
+      const prevParts = [];
+      foodGroups.forEach(gk => {
+        const sk  = gk + '__' + itemIdx;
+        const sel = sheetState.selections[sk];
+        const g   = state.menu.option_groups[gk];
+        if (!g || !sel) return;
+        if (g.type === 'single' && sel) {
+          const opt = g.options.find(o => o.key === sel);
+          if (opt) prevParts.push(opt.label);
+        } else if (Array.isArray(sel) && sel.length) {
+          sel.forEach(k => { const opt = g.options.find(o => o.key === k); if (opt) prevParts.push(opt.label); });
+        }
+      });
+      const preview = prevParts.length ? prevParts.join(', ') : '';
+
+      html += '<div class="option-group ' + (isOpen ? 'open' : '') + '" data-gkey="' + itemKey + '">' +
+        '<div class="option-group-header">' +
+          '<div class="option-group-title">' + ITEM_LABELS[itemIdx-1] + '</div>' +
+          (preview ? '<div class="option-group-selected">' + preview + '</div>' : '') +
+          '<div class="option-group-arrow">▾</div>' +
+        '</div>' +
+        '<div class="option-group-body">';
+
+      // Inside: each food group for this item
+      foodGroups.forEach(gk => {
+        const g   = state.menu.option_groups[gk];
+        if (!g) return;
+        const sk  = gk + '__' + itemIdx;
+        const sel = sheetState.selections[sk];
+
+        html += '<div style="margin-bottom:10px">' +
+          '<div style="font-size:.65rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;' +
+          'color:var(--ember);margin-bottom:5px">' + g.label +
+          (g.required ? ' <span style="color:var(--red);font-size:.55rem">Zorunlu</span>' : '') + '</div>';
+
+        g.options.forEach(opt => {
+          const optPrice = getOptionPrice(item, gk, opt.key);
+          const priceLabel = optPrice > 0 ? '+' + optPrice + ' ₺' : (optPrice < 0 ? optPrice + ' ₺' : '');
+          let selected = false;
+          if (g.type === 'single') selected = sel === opt.key;
+          else selected = (sel || []).includes(opt.key);
+
+          html += '<button class="option-btn ' + (selected ? 'selected' : '') + '" ' +
+            'data-group="' + sk + '" data-realgroup="' + gk + '" data-opt="' + opt.key + '" data-type="' + g.type + '" ' +
+            'style="margin-bottom:4px">' +
+            '<div class="left"><div class="check"></div><span>' + opt.label + '</span></div>' +
+            (priceLabel ? '<span class="opt-price">' + priceLabel + '</span>' : '') +
+            '</button>';
+        });
+        html += '</div>';
+      });
+
+      html += '</div></div>';
+    }
+
+    // İçecekler: separate accordion per içecek
+    drinkGroups.forEach((gk, di) => {
+      const g = state.menu.option_groups[gk];
+      if (!g) return;
+      const sel = sheetState.selections[gk];
+      let selLabel = '';
+      if (sel) { const opt = g.options.find(o => o.key === sel); if (opt) selLabel = opt.label; }
+      const isOpen = sheetState.openGroups && sheetState.openGroups.has(gk);
+
+      html += '<div class="option-group ' + (isOpen ? 'open' : '') + '" data-gkey="' + gk + '">' +
+        '<div class="option-group-header">' +
+          '<div class="option-group-title">' + (di+1) + '. İçecek</div>' +
+          (selLabel ? '<div class="option-group-selected">' + selLabel + '</div>' : '<div class="option-group-req">Zorunlu</div>') +
+          '<div class="option-group-arrow">▾</div>' +
+        '</div>' +
+        '<div class="option-group-body">';
+
+      g.options.forEach(opt => {
+        const optPrice   = getOptionPrice(item, gk, opt.key);
+        const priceLabel = optPrice > 0 ? '+' + optPrice + ' ₺' : '';
+        const selected   = sel === opt.key;
+        html += '<button class="option-btn ' + (selected ? 'selected' : '') + '" ' +
+          'data-group="' + gk + '" data-realgroup="' + gk + '" data-opt="' + opt.key + '" data-type="single">' +
+          '<div class="left"><div class="check"></div><span>' + opt.label + '</span></div>' +
+          (priceLabel ? '<span class="opt-price">' + priceLabel + '</span>' : '') +
+          '</button>';
+      });
+      html += '</div></div>';
+    });
+
+  } else {
+    // Single item: original accordion per group
+    (item.option_groups || []).forEach(gKey => {
+      const g = state.menu.option_groups[gKey];
+      if (!g) return;
+      const sel = sheetState.selections[gKey];
+      let selLabel = '';
+      if (g.type === 'single' && sel) {
+        const opt = g.options.find(o => o.key === sel);
+        if (opt) selLabel = opt.label;
+      } else if (g.type === 'multi' && Array.isArray(sel) && sel.length) {
+        selLabel = sel.map(k => g.options.find(o => o.key === k)?.label).filter(Boolean).join(', ');
+      }
+      const isOpen = sheetState.openGroups && sheetState.openGroups.has(gKey);
+
+      html += '<div class="option-group ' + (isOpen ? 'open' : '') + '" data-gkey="' + gKey + '">' +
+        '<div class="option-group-header">' +
+          '<div class="option-group-title">' + g.label + '</div>' +
+          (g.required ? '<div class="option-group-req">Zorunlu</div>' : '') +
+          (selLabel ? '<div class="option-group-selected">' + selLabel + '</div>' : '') +
+          '<div class="option-group-arrow">▾</div>' +
+        '</div>' +
+        '<div class="option-group-body">' +
+        (g.note ? '<div class="option-group-note">' + g.note + '</div>' : '');
+
+      g.options.forEach(opt => {
+        const optPrice   = getOptionPrice(item, gKey, opt.key);
+        const priceLabel = optPrice > 0 ? '+' + optPrice + ' ₺' : (optPrice < 0 ? optPrice + ' ₺' : '');
+        let selected = false;
+        if (g.type === 'single') selected = sel === opt.key;
+        else selected = (sel || []).includes(opt.key);
+
+        html += '<button class="option-btn ' + (selected ? 'selected' : '') + '" ' +
+          'data-group="' + gKey + '" data-realgroup="' + gKey + '" data-opt="' + opt.key + '" data-type="' + g.type + '">' +
+          '<div class="left"><div class="check"></div><span>' + opt.label + '</span></div>' +
+          (priceLabel ? '<span class="opt-price">' + priceLabel + '</span>' : '') +
+          '</button>';
+      });
+      html += '</div></div>';
+    });
+  }
+  // Qty
+  html += `<div class="qty-row" style="margin-top:10px">
+    <div class="qty-label">Adet</div>
+    <div class="qty-controls">
+      <button class="qty-btn" id="qtyMinus">−</button>
+      <div class="qty-val" id="qtyVal">${sheetState.qty}</div>
+      <button class="qty-btn" id="qtyPlus">+</button>
+    </div>
+  </div>`;
+
+  // Note
+  html += `<div class="option-group" style="margin-top:8px">
+    <div class="option-group-header" data-gkey="__note__">
+      <div class="option-group-title">Not (Opsiyonel)</div>
+      <div class="option-group-arrow">▾</div>
+    </div>
+    <div class="option-group-body">
+      <textarea class="note-input" id="itemNote" placeholder="Mutfağa iletmek istediğin bir şey var mı?" maxlength="200">${sheetState.note}</textarea>
+    </div>
+  </div>`;
+
+  document.getElementById('itemSheetBody').innerHTML = html;
+
+  // Footer
+  const totalPrice = calcItemPrice(item, sheetState.selections) * sheetState.qty;
+  document.getElementById('itemSheetFooter').innerHTML = `
+    <button class="add-cart-btn" id="addCartBtn">
+      <span>Sepete Ekle</span>
+      <span class="price">${totalPrice} ₺</span>
+    </button>`;
+
+  // Accordion toggle
+  if (!sheetState.openGroups) sheetState.openGroups = new Set();
+  document.getElementById('itemSheetBody').querySelectorAll('.option-group').forEach(grp => {
+    const header = grp.querySelector('.option-group-header');
+    if (!header) return;
+    header.addEventListener('click', function() {
+      const gkey = grp.dataset.gkey || '__note__';
+      if (grp.classList.contains('open')) {
+        grp.classList.remove('open');
+        if (sheetState.openGroups) sheetState.openGroups.delete(gkey);
+      } else {
+        grp.classList.add('open');
+        if (sheetState.openGroups) sheetState.openGroups.add(gkey);
+      }
+    });
+  });
+
+  // Option button clicks — data-group is the selKey (may be 'kiyim__1' etc.)
+  document.getElementById('itemSheetBody').querySelectorAll('.option-btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const selKey = this.dataset.group; // indexed key e.g. kiyim__1
+      const opt    = this.dataset.opt;
+      const type   = this.dataset.type;
+      if (type === 'single') {
+        sheetState.selections[selKey] = opt;
+        const grpEl = this.closest('.option-group');
+        if (grpEl) {
+          grpEl.classList.remove('open');
+          sheetState.openGroups.delete(selKey);
+        }
+      } else {
+        const arr = sheetState.selections[selKey] || [];
+        const idx2 = arr.indexOf(opt);
+        if (idx2 >= 0) arr.splice(idx2, 1);
+        else arr.push(opt);
+        sheetState.selections[selKey] = arr;
+      }
+      renderItemSheet();
+    });
+  });
+
+  document.getElementById('qtyMinus').addEventListener('click', () => {
+    if (sheetState.qty > 1) { sheetState.qty--; renderItemSheet(); }
+  });
+  document.getElementById('qtyPlus').addEventListener('click', () => {
+    if (sheetState.qty < 20) { sheetState.qty++; renderItemSheet(); }
+  });
+  document.getElementById('itemNote')?.addEventListener('input', function() {
+    sheetState.note = this.value;
+  });
+  document.getElementById('addCartBtn').addEventListener('click', addToCart);
+}
+
+
+function closeItemSheet() {
+  document.getElementById('itemSheet').classList.remove('show');
+  document.body.classList.remove('no-scroll');
+}
+
+function addToCart() {
+  // Kapalı saat kontrolü sadece sipariş sırasında backend tarafından yapılır
+
+  const item = sheetState.item;
+  // Check required option groups
+  for (const gKey of (item.option_groups || [])) {
+    const g = state.menu.option_groups[gKey];
+    if (g?.required && g.type === 'single' && !sheetState.selections[gKey]) {
+      return toast('⚠️', `${g.label} zorunlu`);
+    }
+  }
+
+  // Build selection labels from all selection keys
+  const selLabels = [];
+  Object.entries(sheetState.selections).forEach(([selKey, sel]) => {
+    if (!sel || (Array.isArray(sel) && !sel.length)) return;
+    // Get the base group key (strip __N suffix)
+    const baseKey = selKey.includes('__') ? selKey.split('__')[0] : selKey;
+    const g = state.menu.option_groups[baseKey];
+    if (!g) return;
+    const prefix = selKey.includes('__') ? (selKey.split('__')[1] + '. ') : '';
+    if (Array.isArray(sel)) {
+      sel.forEach(optKey => {
+        const opt = g.options.find(o => o.key === optKey);
+        if (opt) selLabels.push(prefix + opt.label);
+      });
+    } else {
+      const opt = g.options.find(o => o.key === sel);
+      if (opt) selLabels.push(prefix + opt.label);
+    }
+  });
+
+  const cartItem = {
+    id:         item.id,
+    name:       item.name,
+    emoji:      item.emoji,
+    qty:        sheetState.qty,
+    total:      calcItemPrice(item, sheetState.selections),
+    selections: sheetState.selections,
+    sel_labels: selLabels,
+    note:       sheetState.note,
+    _cart_id:   Date.now() + Math.random(), // unique
+  };
+
+  state.cart.push(cartItem);
+  saveCart();
+  closeItemSheet();
+  toast('🛒', `${item.name} sepete eklendi`);
+}
+
+/* ═══════════════════════════════════════════════════
+   CART TAB
+═══════════════════════════════════════════════════ */
+function renderCart(container) {
+  if (!state.cart.length) {
+    container.innerHTML = `
+      <div class="empty-cart">
+        <div class="ico">🛒</div>
+        <div class="txt">Sepetin boş</div>
+        <button class="btn-primary" style="max-width:200px;margin-top:12px" onclick="document.querySelector('[data-tab=menu]').click()">Menüye Git</button>
+      </div>`;
+    return;
+  }
+
+  let html = '<h2 style="font-family:\'Lora\',serif;font-size:1.3rem;margin-bottom:14px">Sepetim</h2>';
+
+  state.cart.forEach((item, idx) => {
+    const total = item.total * item.qty;
+    html += `<div class="cart-item" data-idx="${idx}">
+      <div class="cart-item-emoji">${item.emoji}</div>
+      <div class="cart-item-info">
+        <div class="cart-item-name">${item.name}</div>
+        ${item.sel_labels?.length ? `<div class="cart-item-opts">${item.sel_labels.join(' · ')}</div>` : ''}
+        ${item.note ? `<div class="cart-item-opts" style="color:var(--amber);font-style:italic">📝 ${item.note}</div>` : ''}
+      </div>
+      <div class="cart-item-right">
+        <div class="cart-item-price">${total} ₺</div>
+        <div class="cart-item-qty">
+          <button class="cart-qty-btn" data-action="dec" data-idx="${idx}">−</button>
+          <span class="cart-qty-val">${item.qty}</span>
+          <button class="cart-qty-btn" data-action="inc" data-idx="${idx}">+</button>
+        </div>
+      </div>
+    </div>`;
+  });
+
+  const subtotal = cartTotal();
+  const discConf2 = (state.business && state.business.payment_discounts) || {};
+  const payConf2  = discConf2[selectedPayment];
+  const discPct   = payConf2 ? (typeof payConf2 === 'number' ? payConf2 : (payConf2.discount || 0)) : 0;
+  const discAmt   = discPct > 0 ? Math.round(subtotal * discPct / 100 * 100) / 100 : 0;
+
+  // Delivery fee from selected address neighborhood
+  let deliveryFee = 0;
+  let minBasket   = 0;
+  if (selectedAddressId && state.addresses && state.addresses.length) {
+    const selAddr = state.addresses.find(a => a.id === selectedAddressId);
+    if (selAddr && state.business && state.business.delivery_zones) {
+      // Extract neighborhood from full_address (first part before first comma)
+      const firstPart = selAddr.full_address.split(',')[0].trim();
+      const zone = state.business.delivery_zones[firstPart];
+      if (zone) {
+        deliveryFee = zone.delivery_fee || 0;
+        minBasket   = zone.min_basket   || 0;
+      }
+    }
+  }
+
+  const afterDiscount = Math.max(0, Math.round((subtotal - discAmt) * 100) / 100);
+  const finalTotal    = Math.round((afterDiscount + deliveryFee) * 100) / 100;
+  const belowMin      = minBasket > 0 && subtotal < minBasket;
+
+  html += `
+    <div class="cart-summary">
+      <div class="summary-row"><span class="lbl">Ara Toplam</span><span class="val">${subtotal} ₺</span></div>
+      ${discAmt > 0 ? `<div class="summary-row" style="color:var(--green)"><span class="lbl">🎉 İndirim (%${discPct})</span><span class="val">-${discAmt} ₺</span></div>` : ''}
+      ${deliveryFee > 0 ? `<div class="summary-row"><span class="lbl">🚚 Teslimat</span><span class="val">${deliveryFee} ₺</span></div>` : deliveryFee === 0 && minBasket > 0 ? '<div class="summary-row" style="color:var(--green)"><span class="lbl">🚚 Teslimat</span><span class="val">Ücretsiz</span></div>' : ''}
+      ${belowMin ? `<div class="summary-row" style="color:var(--red);font-size:.72rem"><span>⚠️ Min. sepet ${minBasket} ₺ — ${minBasket - subtotal} ₺ daha ekle</span></div>` : ''}
+      <div class="summary-row total"><span>Toplam</span><span class="val">${finalTotal} ₺</span></div>
+    </div>
+
+    <!-- Address selector -->
+    <div class="profile-section" style="margin-top:20px">
+      <div class="ps-title">📍 Teslimat Adresi</div>
+      <div id="cartAddrWrap"><div class="skel" style="height:60px;margin-bottom:8px"></div></div>
+    </div>
+
+    <!-- Payment selector -->
+    <div class="profile-section">
+      <div class="ps-title">💳 Ödeme Yöntemi</div>
+      <div class="pay-grid" id="payGrid"></div>
+    </div>
+
+    <!-- Order note -->
+    <div class="profile-section">
+      <div class="ps-title">📝 Sipariş Notu (opsiyonel)</div>
+      <textarea class="note-input" id="orderNote" placeholder="Teslimat için not ekle (kapı kodu, kat vs.)" maxlength="200"></textarea>
+    </div>
+
+    <button class="btn-primary" id="checkoutBtn" style="margin-top:16px">
+      ${belowMin ? '⚠️ Min. Sepet: ' + minBasket + ' ₺' : 'Siparişi Tamamla — ' + finalTotal + ' ₺'}
+    </button>
+
+    <div style="font-size:.65rem;color:var(--mist);text-align:center;margin-top:12px;line-height:1.5">
+      Siparişi tamamlayarak <a href="#" id="openTerms" style="color:var(--ember)">Mesafeli Satış Sözleşmesi</a>'ni kabul etmiş olursunuz.
+    </div>`;
+
+  container.innerHTML = html;
+
+  // Qty buttons
+  container.querySelectorAll('[data-action="inc"]').forEach(b => {
+    b.addEventListener('click', function() {
+      const idx = parseInt(this.dataset.idx);
+      if (state.cart[idx].qty < 20) state.cart[idx].qty++;
+      saveCart(); renderCart(container);
+    });
+  });
+  container.querySelectorAll('[data-action="dec"]').forEach(b => {
+    b.addEventListener('click', function() {
+      const idx = parseInt(this.dataset.idx);
+      state.cart[idx].qty--;
+      if (state.cart[idx].qty <= 0) state.cart.splice(idx, 1);
+      saveCart(); renderCart(container);
+    });
+  });
+
+  // Load addresses + payment options
+  loadCartAddresses();
+  renderPaymentOptions();
+
+  document.getElementById('checkoutBtn').addEventListener('click', checkout);
+  document.getElementById('openTerms').addEventListener('click', function(e) {
+    e.preventDefault();
+    showInfo('Mesafeli Satış Sözleşmesi', 'İşbu sözleşme, ALICI\'nın Bi\' Kokoreç mobil uygulaması üzerinden elektronik ortamda sipariş verdiği gıda ürünlerinin satışı ve teslimatına ilişkindir.\n\n• Fiyatlara KDV dahildir.\n• Gıda ürünleri niteliği gereği teslimat sonrası iade kabul edilmez.\n• Sipariş hazırlığa başlamadan önce iptal edilebilir.\n• Teslimat adresi ve iletişim bilgilerinin doğruluğundan ALICI sorumludur.\n\n6502 sayılı Tüketicinin Korunması Hakkında Kanun ve Mesafeli Sözleşmeler Yönetmeliği esas alınmıştır.');
+  });
+}
+
+let selectedAddressId = null;
+let selectedPayment   = 'cash';
+
+async function loadCartAddresses() {
+  const wrap = document.getElementById('cartAddrWrap');
+  if (!wrap) return;
+  try {
+    const addrs = await api('/customers/addresses');
+    state.addresses = addrs;
+    if (!selectedAddressId && addrs.length) {
+      selectedAddressId = addrs.find(a => a.is_default)?.id || addrs[0].id;
+    }
+    if (!addrs.length) {
+      wrap.innerHTML = `<button class="option-btn" id="addFirstAddr" style="justify-content:center">➕ İlk adresini ekle</button>`;
+      document.getElementById('addFirstAddr').addEventListener('click', () => openAddrSheet());
+      return;
+    }
+    wrap.innerHTML = addrs.map(a => `
+      <button class="option-btn ${a.id === selectedAddressId ? 'selected' : ''}" data-addr="${a.id}" style="flex-direction:column;align-items:flex-start;gap:4px;padding:14px">
+        <div style="display:flex;align-items:center;gap:10px;width:100%">
+          <div class="check"></div>
+          <strong>${a.title}</strong>
+          ${a.is_default ? '<span style="font-size:.55rem;color:var(--ember);font-weight:700;letter-spacing:1px">VARSAYILAN</span>' : ''}
+        </div>
+        <div style="font-size:.72rem;color:var(--fog);margin-left:30px">${a.full_address}</div>
+        ${a.note ? `<div style="font-size:.66rem;color:var(--amber);margin-left:30px;font-style:italic">${a.note}</div>` : ''}
+      </button>
+    `).join('') + `<button class="option-btn" id="addNewAddr" style="justify-content:center;margin-top:4px">➕ Yeni Adres Ekle</button>`;
+
+    wrap.querySelectorAll('[data-addr]').forEach(btn => {
+      btn.addEventListener('click', function() {
+        selectedAddressId = parseInt(this.dataset.addr);
+        loadCartAddresses();
+      });
+    });
+    document.getElementById('addNewAddr').addEventListener('click', () => openAddrSheet());
+  } catch(e) {
+    wrap.innerHTML = `<div style="color:var(--red);font-size:.78rem">Adresler yüklenemedi</div>`;
+  }
+}
+
+function renderPaymentOptions() {
+  const grid = document.getElementById('payGrid');
+  if (!grid) return;
+
+  const cashDisabled = state.customer && state.customer.cash_payment_disabled === 1;
+  const discConf     = (state.business && state.business.payment_discounts) || {};
+
+  // Parse her ödeme yöntemi için conf (eski format: sayı, yeni format: {discount, enabled})
+  const getConf = (key) => {
+    const c = discConf[key];
+    if (!c && c !== 0) return { discount: 0, enabled: true };
+    if (typeof c === 'number') return { discount: c, enabled: true };
+    return { discount: c.discount || 0, enabled: c.enabled !== false };
+  };
+
+  const methods = [
+    { key:'cash',      ico:'💵', name:'Kapıda Nakit',  desc:'Teslim sırasında nakit ödeme' },
+    { key:'card_door', ico:'💳', name:'Kapıda Kart',   desc:'Teslim sırasında POS ile'     },
+    { key:'online',    ico:'📱', name:'Online Kart',   desc:'Şimdi kredi/banka kartı ile'  },
+  ];
+
+  // Aktif olan ilk yöntemi otomatik seç
+  const activePayments = methods.filter(m => {
+    const conf = getConf(m.key);
+    if (!conf.enabled) return false;
+    if (cashDisabled && (m.key === 'cash' || m.key === 'card_door')) return false;
+    return true;
+  });
+
+  if (!activePayments.find(m => m.key === selectedPayment)) {
+    selectedPayment = activePayments[0]?.key || 'online';
+  }
+
+  grid.innerHTML = methods.map(m => {
+    const conf    = getConf(m.key);
+    const sysOff  = !conf.enabled;
+    const custOff = cashDisabled && (m.key === 'cash' || m.key === 'card_door');
+    const disabled = sysOff || custOff;
+    const disc     = conf.discount || 0;
+
+    const discBadge = (disc > 0 && !disabled)
+      ? '<span style="font-size:.6rem;font-weight:800;color:var(--green);background:rgba(76,175,80,.12);border:1px solid rgba(76,175,80,.3);padding:2px 7px;border-radius:100px;margin-left:6px">%' + disc + ' İNDİRİM</span>'
+      : '';
+    const descText = sysOff ? 'Geçici olarak devre dışıdır' : custOff ? 'Kapıda ödeme geçici olarak devre dışıdır' : m.desc;
+
+    return '<button class="pay-btn ' + (selectedPayment === m.key ? 'selected' : '') + ' ' + (disabled ? 'disabled' : '') + '" data-pay="' + m.key + '">' +
+      '<div class="pay-icon">' + m.ico + '</div>' +
+      '<div class="pay-info">' +
+        '<div class="pay-name" style="display:flex;align-items:center;flex-wrap:wrap;gap:4px">' + m.name + discBadge + '</div>' +
+        '<div class="pay-desc">' + descText + '</div>' +
+      '</div>' +
+      '<div class="pay-check"></div>' +
+    '</button>';
+  }).join('');
+
+  grid.querySelectorAll('[data-pay]').forEach(btn => {
+    btn.addEventListener('click', function() {
+      if (this.classList.contains('disabled')) return;
+      selectedPayment = this.dataset.pay;
+      renderPaymentOptions();
+      renderCart(document.getElementById('mainContent'));
+    });
+  });
+}
+
+async function checkout() {
+  // Kapalı saat kontrolü backend tarafında yapılıyor
+  // Frontend sadece status gösterir, gerçek engel backendden gelir
+  if (!state.cart.length) return toast('⚠️', 'Sepet boş');
+  if (!selectedAddressId) return toast('⚠️', 'Lütfen bir adres seç');
+  if (!selectedPayment) return toast('⚠️', 'Lütfen ödeme yöntemi seç');
+
+  // Min basket check
+  const subtotalChk = cartTotal();
+  let minBasketChk = 0;
+  let deliveryFeeChk = 0;
+  if (state.addresses && state.business && state.business.delivery_zones) {
+    const selAddr = state.addresses.find(a => a.id === selectedAddressId);
+    if (selAddr) {
+      const firstPart = selAddr.full_address.split(',')[0].trim();
+      const zone = state.business.delivery_zones[firstPart];
+      if (zone) { minBasketChk = zone.min_basket || 0; deliveryFeeChk = zone.delivery_fee || 0; }
+    }
+  }
+  if (minBasketChk > 0 && subtotalChk < minBasketChk) {
+    return toast('⚠️', 'Minimum sepet tutarı ' + minBasketChk + ' ₺');
+  }
+
+  const btn = document.getElementById('checkoutBtn');
+  btn.disabled = true;
+  btn.textContent = 'Gönderiliyor…';
+
+  try {
+    const items = state.cart.flatMap(c => {
+      // Backend sadece id + qty + name + emoji + selections bekliyor
+      return [{
+        id:          c.id,
+        name:        c.name,
+        emoji:       c.emoji,
+        qty:         c.qty,
+        price:       c.total,
+        selections:  c.selections,
+        sel_labels:  c.sel_labels,
+        note:        c.note,
+      }];
+    });
+
+    const note = document.getElementById('orderNote')?.value.trim() || '';
+
+    const result = await api('/orders', 'POST', {
+      items,
+      address_id: selectedAddressId,
+      payment:    selectedPayment,
+      note,
+    });
+
+    state.cart = [];
+    saveCart();
+    toast('✅', `Sipariş alındı! #${result.order_id}`);
+    setTimeout(() => renderTab('orders'), 800);
+  } catch (e) {
+    toast('❌', e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Siparişi Tamamla';
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   ORDERS TAB
+═══════════════════════════════════════════════════ */
+// Customer order status polling
+let customerOrderPoller = null;
+let knownCustomerStatuses = {};
+
+function playCustomerAlert() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = 660;
+    osc.type = 'sine';
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.4);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.5);
+  } catch(e) {}
+}
+
+const STATUS_LABELS = {
+  pending:   'Siparişin alındı, onay bekleniyor',
+  confirmed: 'Siparişin hazırlanıyor!',
+  delivered: 'Siparişin teslim edildi, afiyet olsun!',
+  cancelled: 'Siparişin iptal edildi'
+};
+
+async function pollCustomerOrders() {
+  if (!state.token) return;
+  try {
+    const orders = await api('/orders');
+    if (!orders) return;
+    orders.forEach(o => {
+      const prev = knownCustomerStatuses[o.id];
+      if (prev && prev !== o.status) {
+        playCustomerAlert();
+        const ico = o.status === 'delivered' ? '✅' : o.status === 'cancelled' ? '❌' : '🔥';
+        toast(ico, STATUS_LABELS[o.status] || 'Sipariş durumu güncellendi');
+        if (state.currentTab === 'orders') {
+          renderOrders(document.getElementById('mainContent'));
+        }
+      }
+      knownCustomerStatuses[o.id] = o.status;
+    });
+  } catch(e) {}
+}
+
+function startOrderPolling() {
+  if (customerOrderPoller) clearInterval(customerOrderPoller);
+  customerOrderPoller = setInterval(pollCustomerOrders, 30000);
+}
+
+async function renderOrders(container) {
+  container.innerHTML = '<h2 style="font-family:\'Lora\',serif;font-size:1.3rem;margin-bottom:14px">Siparişlerim</h2><div class="skel" style="height:90px;margin-bottom:8px"></div><div class="skel" style="height:90px"></div>';
+
+  try {
+    const orders = await api('/orders');
+    if (!orders.length) {
+      container.innerHTML = `<h2 style="font-family:'Lora',serif;font-size:1.3rem;margin-bottom:14px">Siparişlerim</h2>
+        <div class="empty-state"><div class="ico">📦</div><div class="txt">Henüz siparişin yok</div></div>`;
+      return;
+    }
+
+    const statusMap = { pending:{lbl:'⏳ Bekliyor',cls:'pending'}, confirmed:{lbl:'🔥 Hazırlanıyor',cls:'confirmed'}, delivered:{lbl:'✅ Teslim',cls:'delivered'}, cancelled:{lbl:'❌ İptal',cls:'cancelled'} };
+    const payMap    = { cash:'💵 Kapıda Nakit', card_door:'💳 Kapıda Kart', online:'📱 Online' };
+
+    let html = '<h2 style="font-family:\'Lora\',serif;font-size:1.3rem;margin-bottom:14px">Siparişlerim</h2>';
+    orders.forEach(o => {
+      const st = statusMap[o.status] || { lbl: o.status, cls: '' };
+      const items = Array.isArray(o.items) ? o.items : [];
+      html += `<div class="order-list-item ${st.cls}">
+        <div class="ol-top">
+          <div>
+            <div class="ol-id">${fmtDate(o.created_at)}</div>
+            <div class="ol-date">${payMap[o.payment]||o.payment}</div>
+          </div>
+          <div class="ol-status ${st.cls}">${st.lbl}</div>
+        </div>
+        <div class="ol-items">${items.map(i => `${i.emoji||''} ${i.name} ×${i.qty}`).join(' · ')}</div>
+        ${o.address_title ? `<div style="font-size:.65rem;color:var(--mist);margin-bottom:6px">📍 ${o.address_title}</div>` : ''}
+        <div class="ol-bottom">
+          <div class="ol-total">${o.total} ₺</div>
+        </div>
+      </div>`;
+    });
+    container.innerHTML = html;
+  } catch (e) {
+    container.innerHTML = `<div class="empty-state"><div class="ico">⚠️</div><div class="txt">Yüklenemedi: ${e.message}</div></div>`;
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   PROFILE TAB
+═══════════════════════════════════════════════════ */
+async function renderProfile(container) {
+  const c = state.customer || {};
+  const biz = state.business || {};
+  // Build working hours display
+  const DAY_TR = { monday:'Pzt', tuesday:'Sal', wednesday:'Çar', thursday:'Per', friday:'Cum', saturday:'Cmt', sunday:'Paz' };
+  const DAY_ORDER = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+  let hoursHtml = '';
+  if (biz.working_hours) {
+    hoursHtml = DAY_ORDER.map(k => {
+      const h = biz.working_hours[k];
+      if (!h) return '';
+      const isToday = DAY_KEYS[new Date().getDay()] === k;
+      const open = isOpen();
+      if (h.closed) return `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--veil);opacity:.5"><span style="font-size:.78rem;font-weight:600${isToday?';color:var(--cream)':''}">${DAY_TR[k]}</span><span style="font-size:.75rem;color:var(--red)">Kapalı</span></div>`;
+      return `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--veil)"><span style="font-size:.78rem;font-weight:600${isToday?';color:var(--ember)':''}">${DAY_TR[k]}${isToday?' ←':''}</span><span style="font-size:.75rem;color:var(--fog)">${h.open} – ${h.close}</span></div>`;
+    }).join('');
+  }
+
+  let html = `
+    <div class="profile-card">
+      <div class="profile-avatar">👤</div>
+      <div class="profile-info">
+        <div class="profile-name">${c.name || 'Misafir'}</div>
+        <div class="profile-phone">+90 ${formatPhone((c.phone||'').replace(/^90/,''))}</div>
+      </div>
+    </div>
+
+    <div class="profile-section">
+      <div class="ps-title">📍 Adreslerim</div>
+      <div id="profileAddresses"><div class="skel" style="height:80px"></div></div>
+      <button class="option-btn" id="pfAddAddr" style="justify-content:center;margin-top:8px">➕ Yeni Adres Ekle</button>
+    </div>
+
+    <div class="profile-section">
+      <div class="ps-title">⚖️ Yasal</div>
+      <div class="profile-row" id="pfKvkk"><div class="pr-icon">🔒</div><div class="pr-label">KVKK Aydınlatma Metni</div><div class="pr-arrow">›</div></div>
+      <div class="profile-row" id="pfMesafeli"><div class="pr-icon">📜</div><div class="pr-label">Mesafeli Satış Sözleşmesi</div><div class="pr-arrow">›</div></div>
+      <div class="profile-row" id="pfTeslimat"><div class="pr-icon">🚚</div><div class="pr-label">Teslimat ve İade Koşulları</div><div class="pr-arrow">›</div></div>
+      <div class="profile-row" id="pfKurumsal"><div class="pr-icon">🏪</div><div class="pr-label">Kurumsal</div><div class="pr-arrow">›</div></div>
+    </div>
+
+    <div class="profile-section">
+      <div class="ps-title">ℹ️ İşletme</div>
+      <div class="profile-row" id="pfBizName" style="cursor:pointer">
+        <div class="pr-icon">🏪</div>
+        <div class="pr-label">${biz.business_name || "Bi' Kokoreç"}</div>
+        <div class="pr-arrow" style="font-size:.75rem">🔗</div>
+      </div>
+      <div class="profile-row" id="pfLocation" style="cursor:pointer">
+        <div class="pr-icon">📍</div>
+        <div class="pr-label">${biz.business_address || 'Dumlupınar, Balıkesir'}</div>
+        <div class="pr-arrow" style="font-size:.75rem">🗺️</div>
+      </div>
+      <div class="profile-row" id="pfCall" style="cursor:pointer">
+        <div class="pr-icon">📞</div>
+        <div class="pr-label">${biz.business_phone || ''}</div>
+        <div class="pr-arrow">📱</div>
+      </div>
+    </div>
+
+    <div class="profile-section">
+      <div class="ps-title">🕐 Çalışma Saatleri</div>
+      <div style="background:var(--bg2);border:1px solid var(--veil);border-radius:var(--r-lg);padding:12px 14px">
+        ${hoursHtml}
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px;padding-top:8px">
+          <div style="width:8px;height:8px;border-radius:50%;background:${isOpen()?'var(--green)':'var(--red)'}"></div>
+          <span style="font-size:.75rem;font-weight:700;color:${isOpen()?'var(--green)':'var(--red)'}">${isOpen()?'Şu an açık':'Şu an kapalı'}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-section">
+      <div class="ps-title">🚚 Teslimat Bölgeleri</div>
+      <div class="profile-row" id="pfZones" style="cursor:pointer">
+        <div class="pr-icon">🗺️</div>
+        <div class="pr-label">Teslimat yapılan mahalleler ve ücretler</div>
+        <div class="pr-arrow">›</div>
+      </div>
+    </div>
+
+    <button class="option-btn" id="logoutBtn" style="color:var(--red);justify-content:center;margin-top:16px">🚪 Çıkış Yap</button>
+  `;
+
+  container.innerHTML = html;
+
+  // Load addresses
+  try {
+    const addrs = await api('/customers/addresses');
+    state.addresses = addrs;
+    renderProfileAddresses(addrs);
+  } catch (e) {}
+
+  // Event listeners
+  document.getElementById('pfAddAddr').addEventListener('click', () => openAddrSheet());
+
+  // Legal texts from backend
+  document.getElementById('pfKvkk').addEventListener('click', () => {
+    showInfo('KVKK Aydınlatma Metni', state.business && state.business.legal_kvkk ? state.business.legal_kvkk : 'Yükleniyor...');
+  });
+  document.getElementById('pfMesafeli').addEventListener('click', () => {
+    showInfo('Mesafeli Satış Sözleşmesi', state.business && state.business.legal_mesafeli ? state.business.legal_mesafeli : 'Yükleniyor...');
+  });
+  document.getElementById('pfTeslimat').addEventListener('click', () => {
+    showInfo('Teslimat ve İade Koşulları', state.business && state.business.legal_teslimat ? state.business.legal_teslimat : 'Yükleniyor...');
+  });
+  document.getElementById('pfKurumsal').addEventListener('click', () => {
+    showInfo('Kurumsal', state.business && state.business.legal_kurumsal ? state.business.legal_kurumsal : 'Yükleniyor...');
+  });
+
+  // Business links
+  document.getElementById('pfBizName').addEventListener('click', () => {
+    window.open('https://share.google/yX9gpv2I15oCPHkGr', '_blank');
+  });
+  document.getElementById('pfLocation').addEventListener('click', () => {
+    window.open('https://www.google.com/maps/place/Bi\'%20Kokore%C3%A7/@39.647481,27.8806832,20.08z', '_blank');
+  });
+  document.getElementById('pfCall').addEventListener('click', () => {
+    const phone = (state.business && state.business.business_phone) ? state.business.business_phone : '';
+    if (phone) window.location.href = 'tel:' + phone;
+  });
+  document.getElementById('pfZones').addEventListener('click', () => {
+    showZonesSheet();
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    if (confirm('Çıkış yapmak istediğinize emin misiniz?')) logout();
+  });
+}
+
+function renderProfileAddresses(addrs) {
+  const wrap = document.getElementById('profileAddresses');
+  if (!wrap) return;
+  if (!addrs.length) {
+    wrap.innerHTML = '<div style="font-size:.78rem;color:var(--mist);text-align:center;padding:20px">Kayıtlı adres yok</div>';
+    return;
+  }
+  wrap.innerHTML = addrs.map(a => `
+    <div class="addr-card ${a.is_default?'default':''}" data-addr="${a.id}">
+      <div class="addr-top">
+        <div class="addr-title">${a.title}</div>
+        ${a.is_default ? '<div class="addr-default-badge">Varsayılan</div>' : ''}
+      </div>
+      <div class="addr-text">${a.full_address}</div>
+      ${a.note ? `<div class="addr-note">📝 ${a.note}</div>` : ''}
+      <div class="addr-actions">
+        <button class="addr-btn danger" data-del="${a.id}">Sil</button>
+      </div>
+    </div>
+  `).join('');
+
+  wrap.querySelectorAll('[data-del]').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const addrId = this.dataset.del;
+      confirmAction(
+        'Adresi Sil',
+        'Bu adresi kalıcı olarak silmek istediğinize emin misiniz?',
+        async () => {
+          try {
+            await api('/customers/addresses/' + addrId, 'DELETE');
+            toast('✅', 'Adres silindi');
+            closeConfirm();
+            const fresh = await api('/customers/addresses');
+            state.addresses = fresh;
+            renderProfileAddresses(fresh);
+          } catch(err) { toast('❌', err.message); closeConfirm(); }
+        }
+      );
+    });
+  });
+}
+
+/* ═══════════════════════════════════════════════════
+   ADDRESS SHEET
+═══════════════════════════════════════════════════ */
+const ADRES_DATA = {"ALTIEYLÜL":{"1.GÜNDOĞAN MAHALLESİ":["2000","2001","2002","2003","2004","2005","2006","2007","2008","2009","2010","2011","2013","2016","2018","2019","2020","2021","2024","2025","2026","2027","2028","2029","2030","2031","2032","2033","2034","2035","2036","2037","2038","2039","2040","2042","2043","2044","2045","2046","2047","2048","2049","2050","2051","2052","2053","2054","2055","2056","2057","8000","ASLAN","AZERBAYCAN","AÇAR","AÇIKEL","CAMİ ÇIKMAZI","CENGİZ","CENGİZ TOPEL","DURAN","DİLEK","DİRSEKLİ","ENGİN","ERSÜREN","FİLİZ","GÜLBAN","GÜLER","GÜNDOĞDU","GÜNEŞ","GÜVEN","KADER","KALENDER","KAPANCA","KAPTAN","KARABULUT","KİPER","OFİS ÇIKMAZI","REFİK CESUR","SAVRAN","SEYHAN","SONER","SUSAM","UYDAŞ","YILDIRIM","ÇAKIN","ÇAMLIK","ÇAPACI","ÖZEN","ŞAHİN","ŞEHİT ER İSMAİL DURAN"],"2.GÜNDOĞAN MAHALLESİ":["16_YILDIRIM CAD.-","3000","3001","3002","3003","3004","3005","3006","3007","3008","3009","3010","3012","3013","3014","3015","3016","3017","3018","3019","3020","3021","3022","3023","3024","3025","3026","3027","3028","3029","3030","3031","3032","3033","3034","3035","3036","3037","3038","3039","3040","3041","3042","3043","3044","3045","3046","3047","3048","3049","3050","3051","3052","3053","3054","3055","3056","3057","3058","3059","3060","3061","3062","3063","3064","3065","3066","3067","3068","3069","3070","3071","3072","3073","3074","3075","3076","3077","3078","3079","3080","3081","3082","3083","3084","3085","3086","3087","3088","3089","3090","3091","3092","3093","3094","3095","3096","3097","3098","3099","3100","3101","3102","3104","3105","3106","3107","3108","3110","3111","3112","3113","3114","3115","3116","3117","3118","3119","3120","3121","3122","3123","3124","3125","3126","3127","3128","3129","3130","3131","3132","3133","3134","3135","3137","3138","3139","3140","3141","3142","3144","3145","ADALI","ALTAN","ATAY","AZERBAYCAN","AŞÇI","BAHAR","BELGİN","BİLGE","CENGİZ TOPEL","CETVEL","DÖNMEZ","DÜVEN","EKİNCİ-","ERDEM","ERGÜN","ERGÜVEN","GEDİK","GELİNCİK","GÖKÇEDAĞLI","GÖNÜL","GÜRAY","KAMER","KAYA","KESEN","KISA","KRAL","KUMRU","KURTULUŞ","KUTLU","LİMON","MENEKŞE","MERAL","MERCAN","MİNE","NEHİR","PINAR","SERDAR","SERPEN","TEKİN","TEZGER","TORUNTAY","TREN","TUZLA","UMUR","UYGUR","UZUN","YEŞİL","YILDIRIM","YILMAZ","YOKSUL","ZEREN","ZÜMRÜT","ÇETİN","ÇEVRE YOLU","ÖZBEK","İBİŞ","İNCİ","ŞEKER ALİ","ŞENOL","ŞİRİN"],"ALTI EYLÜL MAHALLESİ":["4000","4001","4002","4003","4004","4005","4006","4007","AKATLAR","ALTIEYLÜL","ANAFARTALAR","ATALAR","DOĞRU","GÜL","KEÇECİ","KIRGIZ","KIZILAY","MURAT GÖÇER","SERENLİKUYU","UZUN DÖŞEME","VASIFÇINAR","ZARBALI HULUSİ BEY","ZEYREK","ÇIKMAZ","ÇİĞDEM"],"BAHÇELİEVLER MAHALLESİ":["5000","5001","5002","5003","5005","5006","5007","5008","5009","5010","5012","5013","5018","5020","5023","5024","5025","5027","5028","5029","5031","5032","5033","5034","5035","5036","5037","5038","5039","5040","5041","5042","5043","5044","5045","5046","5047","5050","5051","5052","5055","5056","5057","5058","5059","5060","5061","5062","5063","5065","5066","5067","5069","5070","5071","5072","5073","5074","5075","5076","5077","5079","5080","5081","5083","5084","5085","5089","5091","5092","5093","5094","5095","5096","5097","5099","5100","5101","5102","5103","5104","5106","5108","5109","5110","5111","5112","5113","5115","5116","5117","5118","5119","5120","5121","5122","5123","5124","5125","5126","5127","5128","5131","5132","5134","5135","5136","5137","5138","5139","5141","5142","5144","5147","5148","5150","5152","5153","5154","5155","5156","5158","5160","5161","5162","5163","5164","5166","5167","5168","5169","5170","5171","5172","5173","5174","5177","5178","ADA","AHENK","AKAR","AKASYA","AKINCI","ALAN","ALTINARLI","ANI","ARZU","ATAK","ATATÜRK","AVUKATLAR","BADE","BADEMLİ","BAHÇE","BAHÇELİEVLER","BAĞ","BEGONYA","BEKA","BELDE","BENGİ","BESTE","BEYOĞLU","BEZEN","BURÇ","BİLLUR","COŞAN","COŞKUN","CUMHURİYET","DAL","DALYAN","DAR","DEFNE","DELTA","DURU","DÜZ","DÜZGÜN","EDA","EKİN","ELİM","EMEK","EVLA","EVİM","EZGİ","EĞİTİM","FAZLI","FERAH","FEZA","FLAMİNGO","GEÇİT","GÖZDE","GÜLBEN","GÜNGÖRDÜ","GÜZEL","HANDAN","HUZUR","HÜLYA","HÜNKAR","HİLAL","IHLAMUR","ILGIN","IRMAK","IŞIK","KALKANCI","KANARYA","KAR","KARAGÖZ","KARTAL","KAVŞAK","KESKİN","KESİK","KILIÇ","KIRAĞLI","KIRIM","KIYI","KUĞU","KÜPE","KİBAR","LALE","LEHÇE","LEYLAK","LOZAN","MEHMETÇİK","MERT","MERİÇ","MEVSİM","MODA","MİMOZA","NERGİZ","NUR","NİL","ORBAY","ORKİDE","ORTA","ORTACA","OYLUM","OĞUZ","PALMİYE","PAPATYA","PAZAR","PETONYA","POYRAZ","RÜZGAR","SAKİN","SANAT","SANAT OKULU","SARMAŞIK","SAVAŞTEPE","SELVİ","SERÇE","SEVGİ","SEVİNÇ","STAD","STADYUM","SÜMBÜL","TEKEL","TEKNİK LİSE","TOPRAK","TÖRE","ULU","UYDU","UYGAR","UZAY","VASIFÇINAR","YASEMİN","YAY","YEL","YENİ İZMİR","YENİSU","YONCA","YUNUS","YUVAM","ZÜBEYDE HANIM","ÇAKA","ÇALDIRAN","ÇAY","ÇAYIR","ÇAĞ","ÇIĞIR","ÇİLEK","ÇİÇEK","ÖRNEK","ÖVGÜ","ÖYKÜ","ÜN","İNCE","İPEK","İZCİ","İŞLETMECİLİK"],"DİNKÇİLER MAHALLESİ":["2.POSTA","7000","7001","7002","7003","7004","7006","7007","7008","7009","7010","7011","7012","7013","7014","7015","7016","7017","7018","7019","7020","7021","7022","7023","7024","7025","7026","7027","7028","7029","7031","7032","7033","7034","7035","7036","7037","7038","7041","7042","7044","7045","7046","7047","7048","7049","7050","7051","7052","7053","7054","7055","7056","7057","7058","7059","7060","7062","7063","7064","7065","7066","7067","7068","7069","7071","7072","7073","7074","7075","7076","7077","7078","7079","7080","7081","7082","7083","7084","7085","7086","7087","7088","7089","7090","7091","7092","7093","7094","7095","7096","7097","7098","7099","7100","7101","7103","7104","7105","7106","7109","7111","7112","7114","7115","9 ATATÜRK","9_MEHMET AKİF ERSOY-","9_SÖĞÜTLÜ PINAR-","9_YILDIZ-","AHMET VEHBİ ÇIKRIKCI","ALİ HİKMET PAŞA","ALİ ÇETİNKAYA","AYDINLIK","BALLICA","BARUTHANE","DALKIRAN","DELİKTAŞ","FIRAT","GÖKDELEN","GÖÇMEN KONUTLARI","GÜLLÜ","GÜLLÜK","KARABAKIR","KAYAR","KAYNAK","KIRAN","MEHMET AKİF ERSOY","MERDİVENLİ","MEVLANA","MUTLU","MİMAR SİNAN","PAŞA","SEVDA","SOMA","SU DEPOSU","SÖĞÜTLÜ PINAR","SÜTLÜCE","TANER","TAŞ OCAK","TELLİ","UZUN DÖŞEME","YAĞCILAR","YENİ CAMİ","YENİ KARAN","YENİ KARANFİL","YUNUS EMRE","ZEYTİNLİ","ÇAKMAK","ÇAKMAK ÇIKMAZI","ÇEVİK","ŞAİR NEDİM"],"GAZİOSMANPAŞA MAHALLESİ":["100","101","102","103","104","105","106","107","108","109","110","111","112","113","114","115","116","117","118","119","120","121","122","123","124","125","126","127","128","129","130","131","132","133","134","135","136","137","138","139","13_YENİ İZMİR-","14","141","142","143","144","145","146","147","148","149","15","150","151","152","153","154","155","156","157","158","159","16","160","161","162","163","164","165","166","167","168","169","170","171","172","173","174","175","176","177","179","18","181","182","183","184","185","186","187","188","189","19","190","191","192","193","194","195","196","197","198","199","200","201","202","203","205","206","207","208","209","210","211","212","214","215","216","217","218","219","220","221","222","223","224","225","227","228","229","230","231","232","233","234","235","236","237","238","239","240","241","242","243","244","245","246","247","248","249","250","251","252","253","254","255","256","257","258","259","260","261","262","263","264","265","266","267","268","269","270","271","272","273","274","275","276","277","278","279","280","281","282","283","284","285","286","287","288","289","290","291","293","294","295","296","297","298","299","300","301","302","303","304","305","306","307","308","309","310","311","312","313","314","315","316","317","318","319","320","321","322","324","325","326","327","328","329","330","331","332","333","334","335","336","337","338","339","340","341","343","344","345","347","349","350","351","353","355","357","359","361","363","365","367","369","371","373","375","377","379","380","381","383","384","385","386","387","388","389","390","391","392","393","394","395","396","397","398","399","39_BARBAROS","435","437","438","439","440","499","500","501","502","504","505","ALTIN","DOKUMA YOLU","GÖKASLAN","GÜLENÇ","MEHTAP","T.C.D.D.","YAKUP ŞEVKİPAŞA","YENİ İZMİR","ÇALIŞKAN","ŞEHİT ÖZCAN ÖZSOY"],"GÜMÜŞÇEŞME MAHALLESİ":["14CUMHURİYET","14_163.-","14_CENGİZ TOPEL-","394","453","8000","8001","8002","8003","8004","8005","8006","8007","8008","8009","8010","8011","8012","8013","8014","8015","8016","8017","8018","8019","8020","8021","8022","8025","8026","8027","8028","8029","8030","8031","8032","8033","8034","8035","8036","8037","8038","8039","8040","8041","8042","8043","8044","8045","8046","8047","8048","8049","8050","8051","8052","8053","8054","8055","8056","8057","8058","8059","8060","8061","8062","8063","8064","8065","8066","8067","8068","8069","8071","8072","8073","8074","8075","8077","8078","8079","8080","8081","8082","8083","8084","8085","8086","8087","8088","8089","8090","8091","8092","8093","8094","8095","8096","8097","8098","8099","8100","8101","8102","8103","8104","8105","8106","8107","8108","8109","8110","8111","8112","8113","8114","8115","8116","8117","8118","8119","8120","8121","8122","8123","8124","8125","8126","8127","8128","8129","8130","8131","8132","8133","8134","8135","8136","8137","8138","8140","8141","8142","8143","8145","8146","8147","8149","8150","8152","8153","8155","8156","8157","8159","8161","8162","8163","8164","8165","8166","8167","8169","8171","8172","8173","8174","8175","8177","8178","8179","8182","8183","8184","8185","8186","8187","8189","8190","8191","8198","8199","8200","8201","8202","8203","8204","8205","8206","ADAŞ","AKAY","AKIN","ALP","ARABACILAR","AVLU","AYDIN","AYITLI","BALIKESİR - İZMİR ÇEVRE YOLU","BORA","BUNCAK","CENGİZ TOPEL","DOĞAN","DUTLU","FARUK KULA","FATİH SULTAN MEHMET","FİDAN","GANİBEY","GAZİ MUSTAFA KEMAL ATATÜRK","GÖKDENİZ","GÜMÜŞPALA","GÜRGEN","HANGÜL","HIZIR","KALELİ","KAYIN","KAZIM KARABEKİR","KEMER","KEPSUT","KIRIK","KUYU","KUYULU","LALELİ","MEZBAHA-","MEŞE","OFİS","REFİK CESUR","SAĞLAM","SU AKAR","TAŞ","TELLİ KAVAK","TRENLİK","TRENLİK BAĞLARI MEZBAHA","TÜRKER","VASIFÇINAR","VEHBİ BOLAK","YENİ","YETİŞ","ZEYTİN","ZORBAY","ÇANTALI","ÇATAK","ÇEVRE YOLU","ÇEVREYOLU","ÇEŞME","ÇINAR","ÇİMEN","ÇİVİ","ÖZENTİ","ÖZKUL","ÖZLEM"],"HACI İLBEY MAHALLESİ":["7044","7104","9000","9001","9002","9003","9004","9005","9006","9007","9008","9009","9010","9011","ALİ HİKMET PAŞA","ANAFARTALAR","BARUTHANE","CELALİ ÇIKMAZI","ERGİN","FAİK OCAK","KIŞLA","MARTLI CAMİİ","MEHMET AKİF ERSOY","MİTHAT PAŞA","SIRLI","TAVANLI PINAR","TEKNE ALAN","TEVFİK YOLDEMİR","ULUĞ","UZUN DÖŞEME","YENİ ÇIKAR","ÇIKAR"],"HASAN BASRİ ÇANTAY MAHALLESİ":["10000","10001","10002","10003","10004","10006","10007","10008","10009","10011","10012","10013","10014","10015","10016","10017","10018","10019","10020","10021","10022","10024","10025","10026","10027","10028","10029","10030","10031","10034","10035","10036","10037","10038","10039","10040","10041","10042","10043","10044","10045","10046","10047","10048","10049","10050","10051","10052","10053","10054","10056","10057","10058","10060","10062","10063","10065","10066","10067","10068","10069","10070","10071","10074","10075","10077","10080","10081","10082","10083","10085","10086","10087","10088","10089","19_AKÇA","5131","ADA-","AKYOL","ALGIN","ALPEREN","ATA","ATATÜRK","AVCI","AYCAN","BAHÇE","BALIKESİR - İZMİR ÇEVRE YOLU","BALKANCI","BAYGÖNÜL","BAĞ","BOZKURT","BUKET","BİÇER","CENGİZ TOPEL","DENİZ","DORAN","DİRSEK","ENES","ER","ERDAL","ESENTEPE","ESRA","ESİN","ETKİN","FEVZİ ÇAKMAK","GAYE","GEÇİM","GONCA","KARABEKİR","KARAGÖZ","KARAKIŞ","KARANFİL","KAYALI","KEÇE","KIVRAK","KONUK","LOJMANLAR","NAMIK KEMAL","NEŞE","OKTAY","OYA","PARK","PARK ARKASI","PAŞATORUN","RÜZGAR","SARAÇ","SARFAKLAR","SAĞLIKÇI","SELİN","SEVİL","SEÇİL","STAD","SÖZLEVİ","SÜZEN","TANK ÇİFTLİĞİ YOLU","TAYFUN","TETİK","TOLGA","TORUN","TUNA","TURAN","TÜMER","UYSAL","UÇAN","YAĞDIRAN","YUVAM","ÇAKIR","ÇAM","ÇAĞLAYAN","ÇELEBİ","ÇEVRE YOLU","ÖYKÜ","ÖZ","ÖZCAN","İSTİKBAL","ŞAN","ŞANLI","ŞEHİT ÜSTĞM ABDURRAHMAN TURAN","ŞEN"],"KASAPLAR MAHALLESİ":["11000","11001","11002","11003","11004","11005","11006","11007","11008","11009","11010","11011","11012","11013","11014","11015","11016","11017","11018","11019","11020","11021","11022","11023","11024","11025","11026","23_GÜLLÜ-","23_VASIF ÇINAR-","7035","ACI PINAR","AKYAR","ANAFARTALAR","ANAFARTALAR-","ATALAR","AÇ SEREN","BURÇAK","BİGADİÇ","FIRIN","GÜLHANE","GÜLLÜ","GÜZİN","HELVACI","KIRAN","KIVANÇ","KUVA-İ MİLLİYE","MUTLU","SINDIRGI","SOMA","SÖĞÜTLÜ PINAR","TOPAK","URGANCI","UZUN DÖŞEME","VASIFÇINAR","YENİ İZMİR","ZAMBAK","ÇEVİK","ÇİĞDEM","ÖZER","ŞEREF"],"PLEVNE MAHALLESİ":["12000","12001","12002","12003","12004","12005","12006","12007","12008","12009","12010","12011","12012","12013","12014","12015","12016","12017","12018","12019","12020","12021","12022","12023","12024","12025","12026","12027","12028","12029","12030","12031","12032","12033","12034","12035","12036","12037","12038","12039","12040","12041","12042","12043","12044","12045","12046","12047","12048","12049","12050","12051","12052","12053","12054","12055","12056","12057","12058","12059","12060","12061","12062","12063","12064","12065","12066","12067","12068","12069","12070","12071","12072","12073","12074","12075","12076","12077","12078","12079","12080","12081","12082","12083","12084","12085","12086","12087","12088","12089","12090","12091","12092","12093","12094","12095","12096","12097","12098","12099","12100","12101","12102","12103","12104","12105","12106","12107","12108","12109","12110","12111","12112","12113","12114","12115","12116","12117","12118","12119","12120","12121","12122","12123","12124","12125","12126","12127","12128","12129","12130","12131","12132","12133","12134","12135","12138","12140","12142","12146","12160","261.-","271-","AHUDUDU","ALDEMİR","AVŞAR","AY","AÇELYA","BALPINAR","BARBAROS","BARBAROS ÇIKMAZI","BAŞAK","BEYOĞLU","BULUT","CAMİ","CAN","CEVİZLİ","CUMHURİYET","DEMİRYOLU","ESER","EVREN","FATİH","FULYA","FİRUZE","GARİP","GÜLŞEN","GÜNER","GÜR","HÜR","HÜRRİYET","HİSAR","KAHRAMAN","KARACA","KARESİ","KAVŞAK","KÜLTÜR","KÜÇÜK","KİRAZ","MESKEN","MİMAR","OKUL","PANSİYON","PİLOT","SALTIK","SANAT OKULU","SARAY","SAVAŞTEPE","SEDEF","SEYRANİ","SEZGİN","T.C.D.D.","TULUMBA","YENİ İZMİR","ZEYBEK","ÇAĞLAR","ÇELİK","ÖNDER","ÖZEL","ÖZGÜR","İSKAN","ŞAFAK","ŞEHİT BİROL KOÇ"],"SÜTLÜCE MAHALLESİ":["1.SAÇAKLI-","1.ŞOFÖR EVLERİ","13000","13001","13002","13003","13004","13005","13006","13007","13008","13009","13010","13011","13012","13013","13014","13015","13016","13017","13018","13019","13020","13021","13022","13023","13024","13025","13027","13028","13029","13030","13031","13032","13033","13034","13035","13036","13037","13038","13039","13040","13041","13042","13043","13044","13045","13046","13047","13048","13049","13051","13052","13053","13054","13055","13057","13058","13059","13060","13061","13062","13063","13064","13068","13071","13072","13074","13075","13076","13077","13078","13079","13080","13081","13082","13083","13084","13085","2.ŞOFÖR EVLERİ","3.ŞOFÖR EVLERİ","4.ŞOFÖR EVLERİ","5.ŞOFÖR EVLERİ","6.ŞOFÖR EVLERİ","7.ŞOFÖR EVLERİ","ADEM","ADİL","ALİ ÇETİNKAYA","ARALIK","AYDINLAR","BALKANLI","BAYIR","BAĞLAYAN","BAŞARAN","CAMGÖZ","CEYLAN","DEREBOYU","DERYA","DUMAN","DÖNER","DİKEÇ","EKİNLİ","EVGİN","EĞİNLİOĞLU","GELİN","GÜMÜŞ HASTANE","HASTANE","KABADAYI","KAVAKLI","KAŞIKÇI","KESİŞEN","KÖPRÜ","METİN","NADİR","OKUL YOLU","PAŞA","SAÇAKLI","SEHA","SERBEST","SOMA","SU DEPOSU","SÜTLÜCE","TANER","TARGAL","TATAR","TAŞLIK","TEKELİ","TERS","TRAFO","TİLKİ","VİDİNLİ","YIRCALI","YOKUŞ","YÜKSEL","ÇAKICI","ÇATAL","ÇEKİÇ","ÇINARLI","ÖRS","ÖZGE","İVREN","ŞANSEL","ŞOFÖR EVLERİ"],"YILDIZ MAHALLESİ":["11022","13060","14000","14001","14002","14003","14004","14005","14006","14007","14008","14009","14010","14011","14012","14013","14014","14015","14016","14017","14018","14019","14020","14021","14022","14023","14025","14026","14027","14028","14029","14030","14031","14032","14033","14034","14035","14036","14037","14038","14039","14040","14041","14042","14043","14044","14045","14046","14047","14049","14050","14051","14052","14053","14054","14055","14057","14058","14059","14060","14061","14062","14063","14064","14065","14066","14067","14070","14075","14078","14079","14080","14081","14082","14084","14085","14087","14088","14089","14090","14104","14106","14107","14109","14111","14112","14113","14115","215","272","39_215.-","39_BARBAROS","39_FATİH","AKSOY","AKÇAY","BAYRAKTAR","BERGAZ","DEMİRCİ","DİK","EBRU","EKEN","ESEN","HALICILAR","HASTANE","MEHTAP","MEKİK","OMURTAK","SAR","SOMA","SOĞUKKUYU","SÖĞÜTLÜ","T.C.D.D.","TANER","TÜRE","UFUK","ULUS","ULUS ÇIKMAZI","UMUT","YAKUP ŞEVKİPAŞA","YENİ İZMİR","ZEYNEP","ÇAVUŞ","İNAN","ŞEHİT ÖZCAN ÖZSOY","ŞİFA"]},"KARESİ":{"1.ORUÇGAZİ MAHALLESİ":["1000","1002","1003","1004","1005","1006","1008","1009","1010","1011","1012","1013","1014","1015","1016","1017","1018","1019","1020","1021","1022","1023","AHLAT","ALTAY","AYAR","BAĞLAR","BEYAZ","BİRGİ","HİLAL","KAYABEY","KEBACI","KIRCALI","KOCAKUŞAK","KÖPRÜ","MAHMUDIYE","NEVBAHAR","ORHANLAR","ORTAK","SEVİNÇ","SİPAHİ","VEZİRHAN","ÇELEBİ","ÇINAR","ÖREN"],"2.ORUÇGAZİ MAHALLESİ":["1006","3000","3001","3002","3003","3004","3005","3006","3007","3008","ALTAY","BAĞLAR","DEREBOYU_1","DR.AHMET TOPRAK","KAYABEY","KIRCALI","KOCAKUŞAK","ORHANLAR","TABAKLAR","TÜRKER"],"1.SAKARYA MAHALLESİ":["18013","2000","2001","2002","2003","2004","2005","2006","2007","2008","2009","2010","2011","2012","2013","2014","2015","2016","2017","2018","2019","2020","2021","2022","2023","2024","2025","2026","2027","2028","2029","2030","2031","2032","2033","2034","2035","2036","2037","2038","2039","2040","2041","2042","2043","2044","2045","2046","2047","2048","2049","2050","2051","2052","2053","2054","2055","2056","2057","2058","2059","2060","2061","2062","2063","2064","2065","2066","2067","2068","2069","2070","2071","2072","2073","2074","2075","2076","2077","2078","2079","2080","2081","2082","2083","2084","2085","2086","2087","2088","2089","2090","2091","2092","2093","2094","2095","2096","2097","2098","24000","AKAN","AKASYALI","AKAY","AKDENİZ","AKIN","ALPER","ALTINTAŞ","ATILGAN","AYFER","AYGÖRDÜ","AYVAZ","AÇELYA","BARAN","BATI","BAŞPINAR","CEYLAN","DERELİ","DR.AHMET TOPRAK","EFE","ELMALI","ERTUĞRUL GAZİ","ESKİ BEYKÖY YOLU","FİDAN","FİRUZE","GAMZE","GÖZDE","GÜLDEN","GÜLİN","GÜNEŞ","GÜNGÖRDÜ","GÜVENDİ","KARAMAN","KARANFİL","KARESİ_1","KAVAKLI_1","KILIÇ","KISIKLI","KIYI","KOCAPINAR","KUMRU","KURU","KUTLUAY","KİRAZ","MERKEZ","METİN","NAMLI","NARİN","NUR","ONUR","OSMANİYE","PANSİYON","SAKARYA","SAKIZ","SAKİN","SEMRA","SEZEN","SOĞUKKUYU","TAŞLICA","UYSAL","YAPRAK","YAĞMUR","YÜCEL","YÜKSEL","ZAFER","ÇAKAR","ÇAKMAK","ÇATAR","ÇAY","ÖNDER","ÖZER_1","İLKER","İNCE","İĞDELİ","ŞANLI","ŞEN"],"2.SAKARYA MAHALLESİ":["2064","2067","400","4000","4001","4002","4003","4004","4005","4006","4007","4008","4009","4010","4011","4013","4014","4015","4016","4017","4018","4019","4020","4021","4022","4023","4024","4025","4026","4027","4028","4029","4030","4031","4032","4033","4034","4035","4036","4037","4038","4039","4040","4042","4043","4044","4045","4046","4047","4048","4049","4050","4051","4052","4053","4054","4055","4056","4057","4058","4059","4060","4061","4062","4063","4064","4065","4066","4067","4068","4069","4070","4071","4072","4073","4074","4075","4076","4077","4078","4079","4080","4081","4082","4083","4084","4085","4086","4087","4088","4089","4090","4091","4092","4093","4094","4095","4096","4097","4098","4099","4100","4101","4102","4103","4104","4105","4106","4107","4108","4109","4110","4111","4112","4113","4115","4116","4118","4119","4120","4121","4122","4123","4124","4125","4126","4127","4128","4129","4130","4131","4133","4134","4135","4136","4137","4138","4148","4152","4155","4156","4157","4158","4159","4160","4161","4162","4163","4164","4165","4166","4171","4176","4181","4194","4199","4200","4201","4202","4203","4204","4205","4206","4207","4208","4209","4210","4211","4212","4213","4214","4215","4216","4217","AKDENİZ","ALKIR","ALTINTAŞ","ARA","ASLAN","ATA","ATAK","ATİK","AYYILDIZ","AZİM","BADEMLİ","BAHÇE_1","BAĞLAR","BAŞPINAR","BENGİ","BEREKETLİ","BULUT","CELALİ","CİHAN","CİHAT","DENEME","EFE","ERCAN","ERTUĞRUL GAZİ","ESENLİ","ESRA","FİLİZ","GENÇ","GÜLMEZ","GÜNGÖREN","JAN.KOM.ER VEYSEL AFACAN","KARACA","KASAP","KAVACIK","KAYALARLI","KENAR","KESİK","KISA","KISIKLI","KÜBRA","LOZAN","MENEKŞE","MENZİL","MEVSİM","MUTLU","OĞUZ","PANSİYON","SAKARYA","SEHER","SELVİ","SERDAR","SERPİL","SEVGİ_1","SEZEN","SIRLAN","SOLUGAN","SÖZEN","TANIK","TATLIPINAR_1","TETİK","UHUT","ULUSOY","UYSAL","UZUN","YAMAN","YASEMİN","YATMAZ","YAVUZ","YILDIZ","ZAFER","ZENGİN","ZEYTİNLİK","ÇEVRE YOLU","ÇEVRE YOLU1","ÇEVİK","ÇEŞMELİ","ÇİMEN_1","ÇİVİ","ÇİÇEK_2","ÇİĞDEM_1","ÖNDER","ÖZTÜRK","ÜNLÜ","ŞAHAN","ŞEHİT HAMZA KOCATAŞ"],"ADNAN MENDERES MAHALLESİ":["19010","19017","5000","5003","5004","5005","5006","5007","5008","5009","5010","5011","5012","5013","5014","5015","5016","5017","5018","5019","5020","5021","5022","5023","5025","5026","5027","5028","5029","5030","5031","5032","5033","5034","5035","5036","5037","5038","5039","5040","5041","5042","5043","5044","5045","5046","5047","5048","5049","5050","5051","5052","5053","5054","5056","5057","5059","5060","5061","5062","5064","5065","5066","5067","5068","5069","5070","5071","5073","5074","5075","5076","5078","5079","5080","5082","5083","5084","5085","5087","5088","5089","5090","5091","5094","5095","5096","5101","5102","5103","5200","5201","5202","5203","5204","5205","5206","5207","5208","5209","5210","5211","5212","5213","5500","5550","5888","EDREMİT"],"AKINCILAR MAHALLESİ":["1.IŞIKLI","6000","6004","6005","6006","6007","6008","6009","ARLIOĞLU","BAKIRCILAR","CUMALI","DEREBOYU","DEREİÇİ","DURAK","DURAK ARKASI","DÖKMECİLER","GAZİ","IŞIKLI","KEPSUT","PANCAR","PANCAR ARKASI","PROF. DR. NECMETTİN ERBAKAN","SİLİNDİR","TARAKÇILAR","TEKİN","VASIFÇINAR","YALKIR","YAĞHANE","YENER","ÇARKCI","ŞEHİT PAMİR"],"ALİ HİKMET PAŞA MAHALLESİ":["23028","7001","7002","7003","7004","7005","7006","7007","7008","7009","7012","7013","7014","7015","7016","7018","7019","7020","7022","7023","7024","7025","7026","7027","7028","7030","7031","7032","7033","7034","7035","7036","7037","7038","7040","7041","7042","7043","AKINCILAR","ALTAY","ATALAR ÇIKMAZI","BARLAS","BAYDAK","BOZOK","DEDE","DEMİR","DERİN","DÜZGÜN_1","DİNÇ","EKİN","ENGİN","HATİP","IŞIK","KARAKOL","KORUCU_1","KUYU","LALE SOKAK","NEŞE","OKUL","PAŞA_1","TARLABAŞI","TEPE","TOMURCUK","UYGUN","UÇAR","YAKUT","YAMAÇ","YAYLA","YENİ","YENİYOL ÇIKMAZI","YEŞİL","ZAHİRE İÇİ","ZAKKUM","ZAMBAK_1","ÇAKIR","ÖMER ALİBEY","ÖRNEK","ÜLKÜ","ÜÇPINAR_1","İKİZ","İMAM HATİP","İNCİ","İPEK_2","ŞAHİN","ŞEHİT MUSTAFA DİNÇER"],"ATATÜRK MAHALLESİ":["12013","8000","8001","8002","8003","8004","8005","8006","8007","8008","8009","8010","8011","8012","8013","8014","8015","8016","8017","8018","8019","8020","8021","8022","8023","8024","8025","8026","8027","8028","8029","8030","8031","8032","8033","8034","8035","8036","8037","8038","8039","8040","8041","8042","8043","8044","8045","8046","8047","8048","8049","8050","8051","8052","8053","8054","8055","8056","8057","8059","8060","8061","ALP EREN","ALP RÜSTEM","ALİ ŞAYAKCI","ARZU","BANDIRMA","BARBAROS HAYRETTİN PAŞA","BAYBÜRE","BOĞAÇHAN","BUDAK","DELİ DÜNDAR","DEMİRCİLER","DEREBOYU","DOĞAN","EREN","ERMİŞLER","ESENTEPE","ESKİ BANDIRMA","FARUK KULA","FATİH","GÖKSEL","GÜVEN PARK","GÜÇ","HAMİT KAPLAN","HARMAN","HAYRETTİN","HIFZI AVDAN","HİSAR","IHLAMUR","KANTURALI","KAYIN","KAZANBEY","KEPSUT","KEÇECİ","KIYAN SELÇUK","KURTDERELİ","LOJMANLAR ARKASI","MANOLYA","MİNE","SAATÇİOĞLU","SITKI YIRCALI","SİNEM","TOZAN","TUNÇ","TURGUT REİS","URUZ BEY","YAŞAR DOĞU","YENİ HASTANE","YENİYOL","YILMAZLAR","ZEYBEK_1","ZÜHTÜ","ZÜHTÜ ÖZKARDEŞLER","ÇAM","ÇARK","ÖMER ALİBEY","ÖZDEMİR","ÖZKARDEŞLER","ÜÇPINAR KÖYÜ YOLU","İSABEY","ŞAFAK","ŞAKİR KAZAN","ŞEBBOY","ŞEHİTLİK ÖNÜ"],"AYGÖREN MAHALLESİ":["9001","9002","9003","9004","9005","9006","9007","9008","9009","AYGÖREN","BAHÇE","BALIKAVDAN","GÜNEY","HİLMİ ZİYA APAK","KARAKOLALTI","KIZ ORTAOKUL","KURUPINAR","PARK","PINARLI","SEVİK","TAŞLIK","TOPÇU","YENİPINAR","ÇAMLICA","ÇAMLIK ÇIKMAZI"],"ÇAY MAHALLESİ":["10000","10001","10002","10003","10004","10005","10006","10007","10008","24000","BAŞÇEŞME","DEREBOYU_1","DEĞİRMİ","DR.AHMET TOPRAK","KASAR","MANDIRA_1","PINAR","SAKARYA","YENİSU"],"DUMLUPINAR MAHALLESİ":["11000","11001","11002","11003","11004","9007","9008","ALANLAR","ALİ HİKMET PAŞA","ANAFARTALAR","BALIKAVDAN","BİRLİK","DOĞUMEVİ","DİNDİREN","ESKİ SUNAK","HUZUR","HİLMİ ZİYA APAK","KAZIM ÖZALP","KETEN AVDAN","KIZ ORTAOKUL","KOCA OKUL","KOR","ORTAOKUL","SAMAN","SU BÖLÜMÜ","SUNAK","SÜMER","TABUK","TÜRK DİLİ","ULUS","YAZICI"],"EGE MAHALLESİ":["12000","12001","12002","12003","12004","12005","12006","12007","12008","12009","12010","12011","12012","12013","2.DEREBOYU","8050","ALTAY","AVARLAR","AVCILAR","AVDAN","BARDAKHANE","CÜCELER","DEMİRCİLER","DEREBOYU","EGE","EKMEKCİ","EĞREK","KALAYCILAR","KARAKAŞ","KAVALCI","KAYGILI","KIVRAK","ORTA","TARLABAŞI","YALKIR","YAPICILAR","YENİYOL","ÇALLI","ÇINARLI","ŞENLİK"],"ESKİ KUYUMCULAR MAHALLESİ":["13000","13001","13002","13003","13005","13006","13007","ABDULGAFUR EFENDİ","AKKUYU","ALPARSLAN","ALİ HİKMET PAŞA.","ANAFARTALAR","ATALAR","AYGIN","AYGIT","BANKALAR","GEDİK","GELİN_1","HACI GAYBI","HÜKÜMET","HİSLER BULVARI","IRMAK","IŞTINLI","KEÇECİLER","KIZILAY","LALE_1","MEKİK","MUHARREM HASBİ","MUZAFFER UZKUR","MİLLİ KUVVETLER","SALİH TOZAN","TEVFİK SAĞLAM PAŞA","VASIFÇINAR","YEŞİLLİ","YEŞİLYOL","ÇANKAYA","ÇAVUŞ","ÇAĞRI","İPEK"],"HACI İSMAİL MAHALLESİ":["14000","14001","14002","14003","14004","ACAR","ALTAN","ARIKÇA","ASLANBEY","BAKIR","BURAK","DR.AHMET TOPRAK","ESKİ EDREMİT","GEÇİT","HOCA KUYUSU","KIZ ORTAOKUL","KIZPINAR","SEVİK","SORGUÇ","ZAĞNOS PAŞA","İBİCİ ÇIKMAZI","ŞAMLI"],"HİSARİÇİ MAHALLESİ":["15001","15002","15003","15004","15005","15006","AKÇA","ALACA","ALEV","ALTIN","ALİ HİKMET PAŞA.","ALİ ŞUURİ EFENDİ","AYDINLIK","BASIN","BASMACILAR","BOZKURT","BİLAL","CAMLI BEDESTEN","DR.AHMET TOPRAK","DİLEK","ERGENEKON","GÖZEN","GÜVEN","HÜRRİYET","KIZIK","KURTULUŞ","MİLLİ KUVVETLER","ORHANPINAR","OTAĞ","SANDIKÇILAR","SIRAPINAR","SÜMERBANK ARKASI","TURAN","UNCULAR","YAYMACILAR","YILDIRIM","YONCA","ZAĞNOS PAŞA","ÖRÜCÜLER","ŞEHIT JANDARMA YÜZBAŞI KAMIL AŞIK"],"KARAOĞLAN MAHALLESİ":["16000","16001","16002","16003","16004","16005","16006","ALİ HİKMET PAŞA.","BALIKAVDAN","BAŞAK","BEREKET","BURÇ","ECE AMCA","EMİR","KARAOĞLAN","KETEN","KIZ ORTAOKUL","KOOPERATİF","SANCAR","ULUS","ZAĞNOS PAŞA","ÇATAL","İĞNECİ","ŞADIRVAN","ŞEFTALİ"],"KARESİ MAHALLESİ":["17000","17002","17005","ALANKUYU","ARIK","BAŞYUNAK","CAN","DOKUMACILAR","DR.AHMET TOPRAK","EFE_1","HOCA KUYUSU","HİLMİ KONYA","KARESİ","KAYA","KIZPINAR","SAVRAN","SELÇUK","SUNA","TAŞPAZARI","TURAN","YAYA","ZAĞNOS PAŞA","ÖZER"],"KAYABEY MAHALLESİ":["18000","18001","18002","18003","18004","18005","18006","18007","18008","18009","18010","18011","18012","18013","18014","18015","18016","18017","18019","BAĞLAR","BAŞSİNLİK","BEĞENDİ","DAR","DEREBOYU_1","DR.AHMET TOPRAK","DUMLUPINAR","ENDER","GENÇLİK","KAYABEY_1","KAYIRLAR","LALELİ","MENKÜ","SAKARYA","SALKIM","TÜFEKÇİ","TÜRBE","YALÇIN","YENİ ÇIKMAZ","YENİSU","ÇELİK","ÇETİN","ÇEŞMELİ","ÖZÇELİK"],"KIZPINAR MAHALLESİ":["11004","19000","19003","19005","19006","19007","19010","19011","19012","19013","19014","19016","19017","19018","19019","19021","19022","19120","19125","5000","5003","9009","ALİ HİKMET PAŞA","DR.AHMET TOPRAK","EDREMİT","MERDİVEN","SUNAK","SÜMER","VARYANT","ÇAMLIK ALTI"],"KUVA-İ MİLLİYE MAHALLESİ":["18 MAYIS","1905","1907","20000","20001","20002","20003","20004","20005","20006","20007","20008","20009","20010","20011","20012","20013","20014","20015","20016","20017","20018","20019","20020","20021","20022","20023","20024","20025","20026","20027","20028","20029","20030","20031","20032","20033","20034","20035","20036","20037","20038","20039","20040","20041","20042","20043","20044","20045","20046","20047","20048","20049","20050","20051","20052","20053","20054","20055","20056","20057","20058","20059","20060","20061","20062","20063","20064","20065","20066","20067","20068","20069","20070","20071","20072","20073","20074","20075","20076","20077","20078","20079","20080","20081","20082","20083","20084","20085","20086","20087","20088","20089","20090","20091","20092","20093","20094","20095","20096","20097","20098","20100","20101","20102","20103","20104","20105","20107","20108","20109","20110","20111","20112","20113","20114","20115","20116","20117","20118","20119","20120","20121","20122","20123","20124","20125","20126","20127","20128","20129","20130","20131","20132","20133","20134","20135","20136","20137","20138","20139","20140","20141","20142","20143","20144","20145","20146","20147","20148","20149","20150","20151","20152","20153","20154","20155","20156","20157","20158","20159","20160","20161","20162","20163","20164","20165","20166","20167","20168","20169","20170","20171","20172","20173","20176","20177","20178","20179","20180","20181","20182","20183","20184","20185","20186","20187","20188","20189","20190","20191","20192","20193","20194","20195","20196","20197","20198","20199","20200","20201","20202","20203","20204","20205","20206","20207","20208","20209","20210","20211","20212","20213","20215","20216","20217","20218","20219","20220","20221","20222","20223","20224","20225","20226","20227","20228","20229","20230","20231","20232","20233","20234","20235","20236","20237","20238","20239","20240","20241","20242","20243","20244","20245","20246","20247","20248","20251","20252","20253","20254","20255","20256","20257","20258","20259","20261","20269","20270","20271","20300","20301","20302","20303","20304","20305","20306","20307","20308","20400","2092","ASMALI","BALYALI","BENLİ","CİHAT BİLGEHAN","EDREMİT","ERTUĞRUL GAZİ","HASAN TAHSİN","HÜSEYİN BAŞTUZ","KABAKDERE 38","KARANFİL","ÇAKMAK","ÇEVRE YOLU1","İNCİRLİ","İŞLEK","ŞEHİT ONB.YAVUZ KILIÇ","ŞEHİT POLİS HÜSEYİN TOPAL"],"MALTEPE MAHALLESİ":["1016","21000","21001","21002","21004","21005","21007","21008","21009","21010","21011","21012","21014","21015","21017","21018","21019","21020","21021","21022","21023","21024","21025","21026","21027","21029","21030","21031","21032","21034","21035","21037","21038","21039","21040","21041","21042","21043","21044","21045","21046","21048","21049","21050","21051","21052","21053","21054","21055","21056","21057","21058","21059","21060","21061","21062","21063","21064","21065","21066","21067","21068","21069","21070","21071","21072","21073","21075","21076","21077","21078","21079","21080","21081","21082","21084","21085","21086","21087","21088","21089","21090","21091","21092","21093","21094","21095","23028","23222","AKÇAY","ALP","ALTAY","ALİM","ANIL","ASLI","ASLI ŞEBNEM","AVRAS","AYLİN","BARBAROS","BATTALGAZİ","BAĞLAR","BEYAZIT","BUHARİ","CENGİZHAN","CEVDET PAŞA","ELMAS","EMİRZADE","ERTUĞRUL REİS","FIRINLI","GÜLİSTAN","GÜLİZAR","GÜMÜŞ","HIZLI","KANARYA","KAVAK","KAYABEY","KEKLİK","MALAZGİRT","MEHMET AKİF ERSOY","METEHAN","MEVLANA","MİNA","NEVBAHAR","NİGAR","OKUL","ORHANGAZİ","ORÇUN","OSMANGAZİ","PERTEV","PİRİ REİS","PİYALE PAŞA","SARI","SEDEF","SELVİLİ","SERBENT","SERİN","SIRIM","SİNAN","TUNA","TİMUR","TİMURTAŞ","ULUBAT","YUNUS","ZEYBEK","ZEYTİNLİ","ÇALDIRAN","ÇEVRE YOLU1","ÖZLEM","ÜRİN","İKİZLER","ŞAHİNBEY","ŞEHSUVAR","ŞEHZADE","ŞEHİTLER","ŞİRİN"],"MİRZABEY MAHALLESİ":["14000","22003","22006","22008","22009","ABAK","ANITTEPE YOLU","BAHÇE","BASAMAKLI","BAYIR","BAYIRBAŞI","BURCU","DR.AHMET TOPRAK","DİK","DİLEKÇE","ESKİ EDREMİT","GEÇİT","KAYALIK","KEMERKÖPRÜ","KUYUBAŞI","ORTA_1","PINAR_1","SARAN","SEVİK","TANIKLI","TAŞALTI","TEPE YOLU","YENİ SU","YENİPINAR","YOĞURTÇU","YUMRU","ÇAMLIK","ÇAMLIK ALTI","ÇAMLIK ÇIKMAZI","ŞAMLI"],"PAŞA ALANI MAHALLESİ":["1","10","101","102","103","104","105","106","107","108","109","11","110","111","112","113","114","115","116","117","118","119","12","12 EKİM","120","121","122","123","124","125","126","128","129","13","130","131","132","133","134","135","136","137","138","139","14","140","141","142","143","144","145","146","147","148","149","15","150","151","152","153","154","156","157","158","159","16","160","161","162","163","164","166","167","168","169","17","170","171","172","174","175","176","177","178","179","18","180","181","182","183","184","185","186","187","188","189","19","19 AĞUSTOS","190","191","192","193","194","195","196","197","198","199","2","20","200","201","202","203","204","205","206","207","208","209","21","210","211","212","213","214","215","216","217","218","219","22","220","221","222","223","224","225","226","227","228","229","23","230","231","232","233","234","235","236","237","238","239","24","240","241","242","243","244","245","246","247","248","249","25","250","251","252","253","254","255","256","257","258","259","26","26-1-","260","261","262","263","264","265","266","267","268","269","27","270","271","272","273","274","275","276","277","278","279","28","280","281","282","283","284","285","286","287","288","289","29","290","291","292","293","294","295","296","297","298","299","3","30","300","301","302","303","304","305","306","307","308","309","31","310","311","312","313","314","315","316","317","318","319","32","320","321","322","323","324","325","326","327","328","329","33","330","331","332","333","334","335","336","337","338","34","340","341","342","343","345","346","347","348","349","35","350","351","352","353","354","355","356","357","358","359","36","360","361","362","363","364","366","367","368","369","37","370","371","372","373","374","375","376","377","378","379","38","380","381","382","383","384","385","386","387","388","389","39","390","391","392","393","394","395","396","397","398","399","4","40","401","402","403","404","405","406","407","409","41","411","413","415","416","417","419","42","420","421","422","423","424","425","427","429","43","431","433","435","437","439","44","441","443","445","447","449","45","450","451","452","453","455","457","458","459","46","460","461","462","463","464","465","466","467","468","469","47","470","471","472","473","475","476","478","479","48","485","486","49","496","497","498","499","5","500","51","52","53","54","55","56","57","58","59","6","60","61","65","66","67","68","69","7","70","72","73","74","75","76","8","9","91","92","98","A.GAFFAR OKKAN","ATATÜRK","AVLU","BALIKESİR-BURSA YOLU","BANDIRMA","BARBOROS","CEVDET DEMİRAY","CUMHURİYET_1","DURAK_1","HALİT ZİYA UŞAKLIGİL","KONUK","MELİH KOTANCA","MİMAR SİNAN","PAŞAALANI","REŞİT KAPÇAK","SABRİ UĞUR","SABİHA GÖKÇEN","SEMA","SERKAN","SITKI YIRCALI","SULTAN","TARİHÇİ CEMAL KUTAY","TERMİNAL","TERMİNAL 1.","TEZCAN","YETİŞ","YUNUS EMRE_1","ZAĞNOS MEHMED PAŞA","ÇENGEL","ÇİĞDEM BATUBEY","ÜÇPINAR KÖYÜ YOLU","İSMAİL HAKKI UZUNÇARŞILI"],"TOYGAR MAHALLESİ":["23000","23001","23002","23003","23004","23005","23006","23007","23008","23009","23010","23011","23012","23013","23014","23015","23016","23017","23018","23019","23020","23021","23022","23023","23024","23025","23026","23027","23028","23029","23030","23031","23032","23033","23034","23035","23036","23037","23038","23039","23040","23041","23042","23043","23044","23045","23046","23047","23048","23049","23050","23051","23052","23053","23054","23055","23056","23057","23058","23059","23060","23061","23062","23064","23065","23066","23067","23068","23069","23070","23071","23072","23073","23074","23075","23076","23077","23078","23079","23080","23081","23082","23083","23084","23085","23086","23087","23088","23089","23090","23091","23092","23093","23094","23095","23096","23097","23098","23099","23100","23101","23102","23103","23104","23105","23106","23108","23109","23110","23111","23112","23113","23115","23116","23117","23118","23119","23120","23121","23122","23124","23125","23126","23128","23129","23130","23131","23132","23133","23134","23135","23136","23137","23138","23139","23140","23141","23142","23143","23145","23146","23147","23148","23149","23150","23151","23152","23153","23154","23155","23156","23157","23158","23159","23160","23161","23162","23163","23164","23165","23166","23167","23168","23169","23170","23171","23172","23173","23174","23175","23177","23178","23179","23181","23182","23183","23185","23186","23188","23189","23190","23191","23192","23193","23194","23195","23196","23197","23198","23199","23200","23201","23202","23203","23204","23205","23206","23207","23208","23209","23210","23211","23212","23213","23214","23215","23216","23217","23218","23219","23221","23222","23224","23225","23226","23227","AKAR","ARI","AVCI","BADEM","BAHA","BAHAR","BAL","BATTALGAZİ","BEYLİK","BİNBOĞA","CENGİZ","CUMA","DEMİR ÇIKMAZI","DENİZ","DERE","DEĞİRMEN","DUT","DÖNDÜ","DÜDEN","DÜZGÜN","ESEN","FERAH","FIRAT","GEDİK ÇIKMAZI","GÜL","HAKAN","HAKEM","HAVA","KAPLAN","KAR","KARTAL","KAYIRAN","KESKİN","KETENCİ","KIRAN","KÖROĞLU","KİBAR","MEHMET AKİF ERSOY","MELEK","MURAT","NİSA","OKUL","OSMAN GAZİ","PAPATYA","POYRAZ","SAKIN","SARAY","SEDA","SERÇE","SEVGİ","SÜMBÜL","TEMİZ","TOPAÇ","URUZ BEY","UĞUR","VATAN","YASA","YILMAZ","ZOR","ZORLU","ÇARDAK","ÇAYIR","ÇEVRE YOLU1","ÇIĞ","ÇİM","ÇİMEN","ÖMÜR","ÜMİT","ÜZÜM","ÜÇPINAR KÖYÜ YOLU","ŞAN","ŞEBNEM","ŞEHİT MUSTAFA DİNÇER"],"VİCDANİYE MAHALLESİ":["10000","10001","18013","24000","24001","24002","24003","24004","24005","24006","AŞIK","BALABAN","BÜYÜKKÖMÜRCÜ","DİREKLERARASI","KIYI","MANDIRA_1","SAKARYA","YENİSU","ÇAPAR","ÇELİK"],"YILDIRIM MAHALLESİ":["15005","26000","26001","26002","26003","26004","26005","26006","26007","26008","26009","AYALANLAR","BALAKAN","BAŞSARAN","CUMHURİYET.","GAZİ","MİLLİ KUVVETLER","NACİYE HANIM","PAŞASARAY","SARIGÖZ","TATLICI","TOPAK","YAYMACILAR","YILDIRIM","ÇİVİCİLER"]}};
+
+function openAddrSheet() {
+  document.getElementById('addrSheetTitle').textContent = 'Yeni Adres';
+
+  const ilceler = Object.keys(ADRES_DATA);
+
+  document.getElementById('addrSheetBody').innerHTML = `
+    <div class="addr-form">
+      <div class="field">
+        <div class="field-label">Adres Başlığı <span style="color:var(--red)">*</span></div>
+        <input type="text" class="input-field" id="addrTitle" placeholder="Ev, İş, Okul vs.">
+      </div>
+      <div class="field">
+        <div class="field-label">İlçe <span style="color:var(--red)">*</span></div>
+        <select class="input-field" id="addrIlce" style="cursor:pointer">
+          <option value="">İlçe seçin...</option>
+          ${ilceler.map(i => '<option value="' + i + '">' + i + '</option>').join('')}
+        </select>
+      </div>
+      <div class="field">
+        <div class="field-label">Mahalle <span style="color:var(--red)">*</span></div>
+        <select class="input-field" id="addrMahalle" disabled style="cursor:pointer;opacity:.5">
+          <option value="">Önce ilçe seçin...</option>
+        </select>
+      </div>
+      <div class="field">
+        <div class="field-label">Sokak / Cadde <span style="color:var(--red)">*</span></div>
+        <select class="input-field" id="addrSokak" disabled style="cursor:pointer;opacity:.5">
+          <option value="">Önce mahalle seçin...</option>
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+        <div class="field">
+          <div class="field-label">Bina No <span style="color:var(--red)">*</span></div>
+          <input type="text" class="input-field" id="addrBina" placeholder="5">
+        </div>
+        <div class="field">
+          <div class="field-label">Kat <span style="color:var(--red)">*</span></div>
+          <input type="text" class="input-field" id="addrKat" placeholder="2">
+        </div>
+        <div class="field">
+          <div class="field-label">Daire No <span style="color:var(--red)">*</span></div>
+          <input type="text" class="input-field" id="addrDaire" placeholder="4">
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label">Adres Tarifi (Opsiyonel)</div>
+        <textarea class="note-input" id="addrNote" placeholder="Kapı kodu, bina rengi, kurye için yönlendirme..." style="min-height:60px"></textarea>
+      </div>
+      <label class="checkbox-row" id="addrDefaultRow" style="cursor:pointer">
+        <div class="checkbox" id="addrDefaultBox"></div>
+        <div class="checkbox-label">Varsayılan adres olarak kaydet</div>
+      </label>
+    </div>`;
+
+  document.getElementById('addrSheetFooter').innerHTML = '<button class="btn-primary" id="saveAddrBtn">💾 Kaydet</button>';
+  document.getElementById('addrSheet').classList.add('show');
+  document.body.classList.add('no-scroll');
+
+  // Cascade: ilce secince mahalleler dolsun
+  document.getElementById('addrIlce').addEventListener('change', function() {
+    const ilce = this.value;
+    const mahSel = document.getElementById('addrMahalle');
+    const sokSel = document.getElementById('addrSokak');
+    mahSel.innerHTML = '<option value="">Mahalle seçin...</option>';
+    sokSel.innerHTML = '<option value="">Önce mahalle seçin...</option>';
+    sokSel.disabled = true;
+    sokSel.style.opacity = '.5';
+    if (!ilce) { mahSel.disabled = true; mahSel.style.opacity = '.5'; return; }
+    const mahalleler = Object.keys(ADRES_DATA[ilce] || {}).sort();
+    mahalleler.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m; opt.textContent = m;
+      mahSel.appendChild(opt);
+    });
+    mahSel.disabled = false;
+    mahSel.style.opacity = '1';
+  });
+
+  // Cascade: mahalle secince sokaklar dolsun
+  document.getElementById('addrMahalle').addEventListener('change', function() {
+    const ilce = document.getElementById('addrIlce').value;
+    const mah  = this.value;
+    const sokSel = document.getElementById('addrSokak');
+    sokSel.innerHTML = '<option value="">Sokak / Cadde seçin...</option>';
+    if (!mah) { sokSel.disabled = true; sokSel.style.opacity = '.5'; return; }
+    const sokaklar = (ADRES_DATA[ilce] && ADRES_DATA[ilce][mah]) ? [...ADRES_DATA[ilce][mah]].sort() : [];
+    sokaklar.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s; opt.textContent = s;
+      sokSel.appendChild(opt);
+    });
+    sokSel.disabled = false;
+    sokSel.style.opacity = '1';
+  });
+
+  // Varsayilan checkbox
+  document.getElementById('addrDefaultRow').addEventListener('click', function() {
+    document.getElementById('addrDefaultBox').classList.toggle('checked');
+  });
+
+  document.getElementById('saveAddrBtn').addEventListener('click', saveAddress);
+}
+
+function closeAddrSheet() {
+  document.getElementById('addrSheet').classList.remove('show');
+  document.body.classList.remove('no-scroll');
+}
+
+async function saveAddress() {
+  const title  = document.getElementById('addrTitle').value.trim();
+  const ilce   = document.getElementById('addrIlce').value.trim();
+  const mah    = document.getElementById('addrMahalle').value.trim();
+  const sok    = document.getElementById('addrSokak').value.trim();
+  const bina   = document.getElementById('addrBina').value.trim();
+  const kat    = document.getElementById('addrKat').value.trim();
+  const daire  = document.getElementById('addrDaire').value.trim();
+  const note   = document.getElementById('addrNote').value.trim();
+  const is_default = document.getElementById('addrDefaultBox').classList.contains('checked');
+
+  // Zorunlu alan kontrolleri
+  if (!title)  return toast('⚠️', 'Adres başlığı zorunlu');
+  if (!ilce)   return toast('⚠️', 'İlçe seçiniz');
+  if (!mah)    return toast('⚠️', 'Mahalle seçiniz');
+  if (!sok)    return toast('⚠️', 'Sokak / Cadde seçiniz');
+  if (!bina)   return toast('⚠️', 'Bina numarası zorunlu');
+  if (!kat)    return toast('⚠️', 'Kat zorunlu');
+  if (!daire)  return toast('⚠️', 'Daire numarası zorunlu');
+
+  // Tam adresi birleştir
+  const full_address = mah + ', ' + sok + ' SOKAK/CAD. NO:' + bina + ' KAT:' + kat + ' DAİRE:' + daire + ', ' + ilce + '/BALIKESİR';
+
+  try {
+    await api('/customers/addresses', 'POST', { title, full_address, note, is_default });
+    toast('✅', 'Adres eklendi');
+    closeAddrSheet();
+    if (state.currentTab === 'cart') loadCartAddresses();
+    if (state.currentTab === 'profile') {
+      const addrs = await api('/customers/addresses');
+      state.addresses = addrs;
+      renderProfileAddresses(addrs);
+    }
+  } catch (e) { toast('❌', e.message); }
+}
+
+/* ═══════════════════════════════════════════════════
+   INFO SHEET
+═══════════════════════════════════════════════════ */
+function showInfo(title, text) {
+  document.getElementById('infoSheetTitle').textContent = title;
+  // Render with proper line breaks and spacing
+  const body = document.getElementById('infoSheetBody');
+  body.innerHTML = text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .split('\n\n').map(para => {
+      if (!para.trim()) return '';
+      return '<p style="margin-bottom:14px;line-height:1.7">' +
+        para.trim().split('\n').join('<br>') +
+        '</p>';
+    }).join('');
+  document.getElementById('infoSheet').classList.add('show');
+  document.body.classList.add('no-scroll');
+}
+function showZonesSheet() {
+  const zones = (state.business && state.business.delivery_zones) ? state.business.delivery_zones : {};
+  const keys  = Object.keys(zones).sort();
+
+  document.getElementById('infoSheetTitle').textContent = '🚚 Teslimat Bölgeleri';
+
+  if (!keys.length) {
+    document.getElementById('infoSheetBody').innerHTML = '<p style="color:var(--mist)">Teslimat bölgesi bilgisi henüz eklenmemiş.</p>';
+  } else {
+    let html = '<p style="font-size:.78rem;color:var(--mist);margin-bottom:16px;line-height:1.6">Aşağıdaki mahallelere teslimat yapılmaktadır. Minimum sepet tutarının altında sipariş kabul edilmez.</p>';
+
+    keys.forEach(mah => {
+      const z = zones[mah];
+      const fee = z.delivery_fee || 0;
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;' +
+        'padding:10px 0;border-bottom:1px solid rgba(240,224,192,.08)">' +
+        '<span style="font-size:.82rem;color:var(--cream)">' + mah + '</span>' +
+        '<div style="text-align:right;flex-shrink:0;margin-left:12px">' +
+          '<div style="font-size:.75rem;color:var(--mist)">Min: <strong style="color:var(--ember)">' + (z.min_basket||0) + ' ₺</strong></div>' +
+          '<div style="font-size:.72rem;color:var(--mist)">Teslimat: <strong style="color:' + (fee===0?'var(--green)':'var(--fog)') + '">' + (fee===0?'Ücretsiz':fee+' ₺') + '</strong></div>' +
+        '</div>' +
+      '</div>';
+    });
+
+    document.getElementById('infoSheetBody').innerHTML = html;
+  }
+
+  document.getElementById('infoSheet').classList.add('show');
+  document.body.classList.add('no-scroll');
+}
+
+function closeInfoSheet() {
+  document.getElementById('infoSheet').classList.remove('show');
+  document.body.classList.remove('no-scroll');
+}
+
+/* ═══════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', function() {
+  initAuthScreen();
+
+  // Nav buttons
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', function() { renderTab(this.dataset.tab); });
+  });
+
+  // Sheet closers
+  document.getElementById('itemSheetClose').addEventListener('click', closeItemSheet);
+  document.getElementById('itemSheet').addEventListener('click', function(e) {
+    if (e.target === this) closeItemSheet();
+  });
+  document.getElementById('addrSheetClose').addEventListener('click', closeAddrSheet);
+  document.getElementById('addrSheet').addEventListener('click', function(e) {
+    if (e.target === this) closeAddrSheet();
+  });
+  document.getElementById('infoSheetClose').addEventListener('click', closeInfoSheet);
+  document.getElementById('infoSheet').addEventListener('click', function(e) {
+    if (e.target === this) closeInfoSheet();
+  });
+
+  // Closed modal
+  // Confirm modal
+  document.getElementById('confirmModalCancel').addEventListener('click', closeConfirm);
+  document.getElementById('confirmModalOK').addEventListener('click', function() {
+    if (_confirmCb) _confirmCb();
+  });
+  document.getElementById('confirmModal').addEventListener('click', function(e) {
+    if (e.target === this) closeConfirm();
+  });
+
+  document.getElementById('closedOk').addEventListener('click', function() {
+    document.getElementById('closedModal').classList.remove('show');
+  });
+
+  // Initial decision: auth or app
+  setTimeout(async () => {
+    if (state.token && state.customer) {
+      await enterApp();
+    } else {
+      showScreen('authScreen');
+    }
+  }, 600);
+});
+
+</script>
+</body>
+</html>
