@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>İletişim & Hesap Silme — Bi' Kokoreç</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Syne:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:     #0e0b09;
+    --bg2:    #1a1510;
+    --bg3:    #221a13;
+    --border: rgba(255,255,255,.08);
+    --ember:  #e85010;
+    --cream:  #f0e8dc;
+    --mist:   #8a7a6a;
+    --fog:    #c0b0a0;
+    --green:  #4caf50;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--cream);
+    font-family: 'Lora', Georgia, serif;
+    line-height: 1.8;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Header */
+  .site-header {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .logo { font-family: 'Lora', serif; font-size: 1.15rem; font-weight: 600; color: var(--cream); }
+  .logo em { color: var(--ember); font-style: italic; }
+  .hdivider { width: 1px; height: 16px; background: var(--border); }
+  .page-label {
+    font-family: 'Syne', sans-serif;
+    font-size: .68rem; font-weight: 600;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--mist);
+  }
+
+  .container { max-width: 640px; margin: 0 auto; padding: 44px 24px 80px; }
+
+  /* Hero */
+  .hero { margin-bottom: 40px; }
+  .hero-tag {
+    font-family: 'Syne', sans-serif;
+    font-size: .65rem; font-weight: 700;
+    letter-spacing: 3px; text-transform: uppercase;
+    color: var(--ember); margin-bottom: 12px;
+  }
+  .hero h1 {
+    font-family: 'Lora', serif;
+    font-size: clamp(1.7rem, 5vw, 2.4rem);
+    font-weight: 600; line-height: 1.25;
+    margin-bottom: 14px;
+  }
+  .hero p { font-size: .95rem; color: var(--fog); }
+
+  /* Cards */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: .7rem; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--mist); margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-title span { font-size: 1rem; }
+
+  /* Contact rows */
+  .contact-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .contact-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .contact-row:first-child { padding-top: 0; }
+  .cr-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: var(--bg3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; flex-shrink: 0;
+  }
+  .cr-body { flex: 1; }
+  .cr-label {
+    font-family: 'Syne', sans-serif;
+    font-size: .65rem; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    color: var(--mist); margin-bottom: 3px;
+  }
+  .cr-value { font-size: .92rem; color: var(--fog); }
+  .cr-value a { color: var(--ember); text-decoration: none; }
+  .cr-value a:hover { text-decoration: underline; }
+
+  /* Delete section */
+  .delete-card {
+    background: rgba(224,85,85,.05);
+    border: 1px solid rgba(224,85,85,.2);
+    border-radius: 16px;
+    padding: 24px;
+    margin-top: 24px;
+  }
+  .delete-title {
+    font-family: 'Syne', sans-serif;
+    font-size: .7rem; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: #e05555; margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .delete-card p {
+    font-size: .9rem; color: var(--fog);
+    margin-bottom: 10px;
+  }
+  .delete-card p:last-of-type { margin-bottom: 16px; }
+  .steps {
+    list-style: none;
+    display: flex; flex-direction: column; gap: 8px;
+    margin-bottom: 16px;
+  }
+  .steps li {
+    font-size: .88rem; color: var(--fog);
+    padding-left: 22px; position: relative;
+  }
+  .steps li::before {
+    content: attr(data-n);
+    position: absolute; left: 0;
+    font-family: 'Syne', sans-serif;
+    font-size: .65rem; font-weight: 700;
+    color: #e05555;
+    background: rgba(224,85,85,.12);
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    top: 3px;
+    line-height: 16px;
+    text-align: center;
+  }
+  .delete-note {
+    background: var(--bg3);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: .82rem;
+    color: var(--mist);
+    line-height: 1.6;
+  }
+  .delete-note strong { color: var(--fog); }
+
+  /* CTA button */
+  .cta-btn {
+    display: inline-flex;
+    align-items: center; gap: 8px;
+    background: var(--ember);
+    color: #fff;
+    font-family: 'Syne', sans-serif;
+    font-size: .82rem; font-weight: 700;
+    letter-spacing: .5px;
+    padding: 12px 20px;
+    border-radius: 10px;
+    text-decoration: none;
+    transition: opacity .2s;
+  }
+  .cta-btn:hover { opacity: .85; }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 32px 0;
+  }
+
+  .footer {
+    font-family: 'Syne', sans-serif;
+    font-size: .7rem; color: var(--mist);
+    text-align: center; margin-top: 40px;
+  }
+
+  @media (max-width: 480px) {
+    .container { padding: 28px 16px 60px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="logo">Bi' <em>Kokoreç</em></div>
+  <div class="hdivider"></div>
+  <div class="page-label">İletişim</div>
+</header>
+
+<div class="container">
+
+  <div class="hero">
+    <div class="hero-tag">Destek & İletişim</div>
+    <h1>Bize Ulaşın</h1>
+    <p>Siparişleriniz, hesabınız veya uygulama hakkında her türlü konuda bize aşağıdaki kanallardan ulaşabilirsiniz.</p>
+  </div>
+
+  <!-- İletişim Kanalları -->
+  <div class="card">
+    <div class="card-title"><span>📬</span> İletişim Kanalları</div>
+
+    <div class="contact-row">
+      <div class="cr-icon">📞</div>
+      <div class="cr-body">
+        <div class="cr-label">Telefon</div>
+        <div class="cr-value"><a href="tel:02662245656">0266 224 56 56</a></div>
+      </div>
+    </div>
+
+    <div class="contact-row">
+      <div class="cr-icon">📍</div>
+      <div class="cr-body">
+        <div class="cr-label">Adres</div>
+        <div class="cr-value">Dumlupınar Mahallesi, Balıkesir</div>
+      </div>
+    </div>
+
+    <div class="contact-row">
+      <div class="cr-icon">🕐</div>
+      <div class="cr-body">
+        <div class="cr-label">Çalışma Saatleri</div>
+        <div class="cr-value">Her gün 17:00 – 04:00</div>
+      </div>
+    </div>
+
+  </div>
+
+  <hr class="divider">
+
+  <!-- Hesap Silme -->
+  <div class="delete-card">
+    <div class="delete-title"><span>🗑️</span> Hesap ve Veri Silme Talebi</div>
+
+    <p>Hesabınızın ve kişisel verilerinizin silinmesini talep etmek için aşağıdaki adımları izleyebilirsiniz.</p>
+
+    <ul class="steps">
+      <li data-n="1">Yukarıdaki telefon numarasını arayın</li>
+      <li data-n="2">"Hesap silme talebi" olduğunu belirtin</li>
+      <li data-n="3">Kayıtlı telefon numaranızı doğrulayın</li>
+      <li data-n="4">Talebiniz en geç <strong>3 iş günü</strong> içinde işleme alınır</li>
+    </ul>
+
+    <div class="delete-note">
+      <strong>Silinecek veriler:</strong> Adınız, telefon numaranız, teslimat adresleriniz ve sipariş geçmişiniz kalıcı olarak silinir. Bu işlem geri alınamaz.
+    </div>
+  </div>
+
+  <div class="footer">
+    © 2020 Bi' Kokoreç — Dumlupınar, Balıkesir
+  </div>
+
+</div>
+</body>
+</html>
