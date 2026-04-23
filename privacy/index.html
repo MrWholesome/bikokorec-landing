@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gizlilik Politikası — Bi' Kokoreç</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Syne:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:     #0e0b09;
+    --bg2:    #1a1510;
+    --border: rgba(255,255,255,.08);
+    --ember:  #e85010;
+    --cream:  #f0e8dc;
+    --mist:   #8a7a6a;
+    --fog:    #c0b0a0;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--cream);
+    font-family: 'Lora', Georgia, serif;
+    line-height: 1.8;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Header */
+  .site-header {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .site-header .logo {
+    font-family: 'Lora', serif;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--cream);
+  }
+  .site-header .logo em {
+    color: var(--ember);
+    font-style: italic;
+  }
+  .site-header .divider {
+    width: 1px; height: 18px;
+    background: var(--border);
+  }
+  .site-header .page-title {
+    font-family: 'Syne', sans-serif;
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--mist);
+  }
+
+  /* Layout */
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  /* Hero */
+  .hero {
+    margin-bottom: 48px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+  .hero-label {
+    font-family: 'Syne', sans-serif;
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--ember);
+    margin-bottom: 14px;
+  }
+  .hero h1 {
+    font-family: 'Lora', serif;
+    font-size: clamp(1.8rem, 5vw, 2.6rem);
+    font-weight: 600;
+    line-height: 1.25;
+    color: var(--cream);
+    margin-bottom: 16px;
+  }
+  .hero-meta {
+    font-family: 'Syne', sans-serif;
+    font-size: .78rem;
+    color: var(--mist);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .hero-meta span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .hero-meta span::before {
+    content: '';
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--ember);
+    flex-shrink: 0;
+  }
+
+  /* Sections */
+  .section {
+    margin-bottom: 40px;
+  }
+  .section-num {
+    font-family: 'Syne', sans-serif;
+    font-size: .6rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--ember);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .section h2 {
+    font-family: 'Lora', serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--cream);
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section p {
+    font-size: .95rem;
+    color: var(--fog);
+    margin-bottom: 12px;
+  }
+  .section p:last-child { margin-bottom: 0; }
+
+  /* List */
+  .data-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .data-list li {
+    font-size: .92rem;
+    color: var(--fog);
+    padding-left: 18px;
+    position: relative;
+  }
+  .data-list li::before {
+    content: '—';
+    position: absolute;
+    left: 0;
+    color: var(--ember);
+    font-weight: 600;
+  }
+
+  /* Info box */
+  .info-box {
+    background: rgba(232,80,16,.07);
+    border: 1px solid rgba(232,80,16,.2);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin: 16px 0;
+  }
+  .info-box p {
+    font-size: .88rem;
+    color: var(--fog);
+    margin: 0;
+  }
+  .info-box strong {
+    color: var(--cream);
+  }
+
+  /* Contact card */
+  .contact-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    margin-top: 48px;
+  }
+  .contact-card h3 {
+    font-family: 'Lora', serif;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--cream);
+  }
+  .contact-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .contact-row:last-child { margin-bottom: 0; }
+  .contact-row .label {
+    font-family: 'Syne', sans-serif;
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--mist);
+    min-width: 80px;
+    padding-top: 2px;
+  }
+  .contact-row .value {
+    font-size: .9rem;
+    color: var(--fog);
+  }
+  .contact-row .value a {
+    color: var(--ember);
+    text-decoration: none;
+  }
+
+  /* Footer */
+  .page-footer {
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-family: 'Syne', sans-serif;
+    font-size: .72rem;
+    color: var(--mist);
+    text-align: center;
+  }
+
+  @media (max-width: 480px) {
+    .container { padding: 32px 18px 60px; }
+    .hero { margin-bottom: 32px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="logo">Bi' <em>Kokoreç</em></div>
+  <div class="divider"></div>
+  <div class="page-title">Gizlilik Politikası</div>
+</header>
+
+<div class="container">
+
+  <div class="hero">
+    <div class="hero-label">Yasal Bilgilendirme</div>
+    <h1>Gizlilik Politikası</h1>
+    <div class="hero-meta">
+      <span>Yürürlük Tarihi: 23 Nisan 2026</span>
+      <span>Son Güncelleme: 23 Nisan 2026</span>
+      <span>Bi' Kokoreç — Balıkesir</span>
+    </div>
+  </div>
+
+  <!-- 1 -->
+  <div class="section">
+    <div class="section-num">01</div>
+    <h2>Genel Bilgi</h2>
+    <p>Bi' Kokoreç ("biz", "işletmemiz") olarak, mobil uygulamamızı ve web sitemizi kullanan kullanıcılarımızın ("siz") kişisel verilerinin gizliliğini ve güvenliğini büyük önem veriyoruz.</p>
+    <p>Bu Gizlilik Politikası; hangi verileri topladığımızı, bu verileri nasıl kullandığımızı, kimlerle paylaşabileceğimizi ve haklarınızı açıklamaktadır. Uygulamamızı kullanarak bu politikayı kabul etmiş sayılırsınız.</p>
+  </div>
+
+  <!-- 2 -->
+  <div class="section">
+    <div class="section-num">02</div>
+    <h2>Topladığımız Veriler</h2>
+    <p>Hizmetlerimizi sunabilmek amacıyla aşağıdaki kişisel verileri topluyoruz:</p>
+    <ul class="data-list">
+      <li><strong>Kimlik Bilgileri:</strong> Ad ve soyad</li>
+      <li><strong>İletişim Bilgileri:</strong> Cep telefonu numarası</li>
+      <li><strong>Konum Bilgileri:</strong> Teslimat adresi (mahalle, sokak, bina bilgisi)</li>
+      <li><strong>Sipariş Geçmişi:</strong> Verilen siparişler, ürün tercihleri, ödeme yöntemi</li>
+      <li><strong>Cihaz Bilgileri:</strong> İşletim sistemi türü ve sürümü, uygulama sürümü</li>
+    </ul>
+    <div class="info-box">
+      <p><strong>Ödeme Güvenliği:</strong> Kredi kartı veya banka kartı bilgilerinizi <strong>asla</strong> saklamamaktayız. Ödeme işlemleri yalnızca onaylı ödeme altyapısı üzerinden gerçekleştirilmektedir.</p>
+    </div>
+  </div>
+
+  <!-- 3 -->
+  <div class="section">
+    <div class="section-num">03</div>
+    <h2>Verilerin Kullanım Amacı</h2>
+    <p>Topladığımız veriler yalnızca aşağıdaki amaçlarla kullanılmaktadır:</p>
+    <ul class="data-list">
+      <li>Siparişlerin alınması, hazırlanması ve teslimatının gerçekleştirilmesi</li>
+      <li>Hesap doğrulama (tek kullanımlık SMS kodu / OTP)</li>
+      <li>Müşteri hizmetleri ve destek sağlanması</li>
+      <li>Sipariş durumu ve teslimat bildirimleri gönderilmesi</li>
+      <li>Onay vermeniz hâlinde kampanya ve fırsatlar hakkında bilgilendirme</li>
+      <li>Hizmet kalitesinin iyileştirilmesi ve teknik sorunların giderilmesi</li>
+    </ul>
+  </div>
+
+  <!-- 4 -->
+  <div class="section">
+    <div class="section-num">04</div>
+    <h2>Veri Paylaşımı</h2>
+    <p>Kişisel verileriniz hiçbir koşulda ticari amaçla üçüncü taraflarla paylaşılmaz veya satılmaz.</p>
+    <p>Verileriniz yalnızca şu durumlarda sınırlı ölçüde üçüncü taraflarla paylaşılabilir:</p>
+    <ul class="data-list">
+      <li><strong>Teslimat Hizmetleri:</strong> Siparişinizin iletilmesi için kullanılan kurye veya paket servisi platformları (yalnızca teslimat için gereken ad, adres ve telefon bilgisi)</li>
+      <li><strong>SMS Altyapısı:</strong> Doğrulama kodlarının iletilmesi amacıyla yalnızca telefon numarası</li>
+      <li><strong>Yasal Yükümlülükler:</strong> Yetkili kamu kuruluşlarının yasal talepleri doğrultusunda</li>
+    </ul>
+  </div>
+
+  <!-- 5 -->
+  <div class="section">
+    <div class="section-num">05</div>
+    <h2>Veri Saklama ve Güvenlik</h2>
+    <p>Kişisel verileriniz, hizmet ilişkimizin devam ettiği süre boyunca ve yasal yükümlülükler kapsamında gerektiği kadar saklanmaktadır.</p>
+    <p>Verilerinizin güvenliğini sağlamak amacıyla şu önlemler alınmaktadır:</p>
+    <ul class="data-list">
+      <li>Sunucu ve veritabanına erişimde şifreli bağlantı (HTTPS / TLS)</li>
+      <li>Hassas verilerin (şifre vb.) hashlenerek saklanması</li>
+      <li>JWT tabanlı oturum yönetimi ile yetkisiz erişimin engellenmesi</li>
+      <li>Düzenli yedekleme ve erişim denetimi</li>
+    </ul>
+  </div>
+
+  <!-- 6 -->
+  <div class="section">
+    <div class="section-num">06</div>
+    <h2>Çerezler ve İzleme</h2>
+    <p>Uygulamamız, işlevsellik ve oturum yönetimi dışında izleme veya profilleme amacıyla çerez kullanmamaktadır. Üçüncü taraf reklam ağları veya analitik araçlarla veri paylaşımı yapılmamaktadır.</p>
+  </div>
+
+  <!-- 7 -->
+  <div class="section">
+    <div class="section-num">07</div>
+    <h2>Çocukların Gizliliği</h2>
+    <p>Hizmetlerimiz 13 yaşın altındaki bireylere yönelik değildir. 13 yaş altındaki bireylerden bilerek kişisel veri toplamıyoruz. Eğer ebeveyn veya vasi iseniz ve çocuğunuzun veri paylaştığını fark ederseniz lütfen bizimle iletişime geçin.</p>
+  </div>
+
+  <!-- 8 -->
+  <div class="section">
+    <div class="section-num">08</div>
+    <h2>KVKK Kapsamındaki Haklarınız</h2>
+    <p>6698 sayılı Kişisel Verilerin Korunması Kanunu ("KVKK") uyarınca aşağıdaki haklara sahipsiniz:</p>
+    <ul class="data-list">
+      <li>Kişisel verilerinizin işlenip işlenmediğini öğrenme</li>
+      <li>İşlenmişse buna ilişkin bilgi talep etme</li>
+      <li>İşlenme amacını ve amacına uygun kullanılıp kullanılmadığını öğrenme</li>
+      <li>Eksik veya yanlış işlenen verilerin düzeltilmesini isteme</li>
+      <li>Verilerin silinmesini veya yok edilmesini talep etme</li>
+      <li>Otomatik sistemler aracılığıyla ortaya çıkan sonuca itiraz etme</li>
+      <li>Hukuka aykırı işleme nedeniyle uğradığınız zararın giderilmesini talep etme</li>
+    </ul>
+    <p>Bu haklarınızı kullanmak için aşağıdaki iletişim bilgilerinden bize ulaşabilirsiniz.</p>
+  </div>
+
+  <!-- 9 -->
+  <div class="section">
+    <div class="section-num">09</div>
+    <h2>Politika Değişiklikleri</h2>
+    <p>Bu Gizlilik Politikası zaman zaman güncellenebilir. Önemli değişiklikler olması durumunda kullanıcılarımıza uygulama üzerinden veya SMS ile bildirim yapılacaktır. Politikanın güncel versiyonu her zaman bu sayfada yayımlanmaktadır.</p>
+  </div>
+
+  <!-- İletişim -->
+  <div class="contact-card">
+    <h3>📬 İletişim ve Veri Sorumlusu</h3>
+    <div class="contact-row">
+      <div class="label">İşletme</div>
+      <div class="value">Bi' Kokoreç</div>
+    </div>
+    <div class="contact-row">
+      <div class="label">Adres</div>
+      <div class="value">Dumlupınar Mahallesi, Balıkesir</div>
+    </div>
+    <div class="contact-row">
+      <div class="label">Telefon</div>
+      <div class="value"><a href="tel:02662245656">0266 224 56 56</a></div>
+    </div>
+    <div class="contact-row">
+      <div class="label">Konu</div>
+      <div class="value">KVKK / Gizlilik başlığıyla ulaşabilirsiniz</div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    © 2026 Bi' Kokoreç — Tüm hakları saklıdır
+  </div>
+
+</div>
+</body>
+</html>
