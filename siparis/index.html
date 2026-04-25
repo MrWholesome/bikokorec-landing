@@ -76,8 +76,14 @@ body.no-scroll{overflow:hidden;position:fixed;width:100%}
     var(--bg0);
   padding:24px;
 }
-.auth-inner{flex:1;display:flex;flex-direction:column;justify-content:center;max-width:420px;margin:0 auto;width:100%;gap:28px}
-.brand-big{text-align:center;margin-bottom:8px}
+.auth-inner{
+  display:flex;flex-direction:column;justify-content:space-between;
+  min-height:100vh;min-height:100dvh;
+  max-width:480px;margin:0 auto;width:100%;
+  padding:max(env(safe-area-inset-top),32px) 16px max(env(safe-area-inset-bottom),28px);
+  gap:0;
+}
+.brand-big{text-align:center;padding-top:16px}
 .brand-big .top-text{
   font-size:.8rem;color:var(--mist);letter-spacing:4px;font-weight:600;
   text-transform:uppercase;margin-bottom:8px;
@@ -97,7 +103,7 @@ body.no-scroll{overflow:hidden;position:fixed;width:100%}
 
 .auth-card{
   background:var(--bg2);border:1px solid var(--veil);border-radius:var(--r-xl);
-  padding:28px 22px;display:flex;flex-direction:column;gap:16px;
+  padding:24px 20px;display:flex;flex-direction:column;gap:14px;margin-top:20px;
 }
 .auth-card h2{
   font-family:'Lora',serif;font-size:1.35rem;font-weight:600;
@@ -619,52 +625,52 @@ select.input-field option{background:var(--bg3);color:var(--cream)}
       <h1>Bi' <em>Kokoreç</em></h1>
       <div class="tagline">Sokak lezzeti</div>
     </div>
-    </div>
 
-    <!-- Phone entry -->
+    <!-- ADIM 1: Telefon girişi -->
     <div class="auth-card" id="phoneCard">
       <h2>Telefonunla giriş yap</h2>
-      <p class="sub">Seni tanıyabilmemiz için telefon numaranı onaylayacağız. Güvenliğin için tek kullanımlık kod göndereceğiz.</p>
-
-      <div class="field">
-        <div class="field-label">Ad Soyad</div>
-        <input type="text" class="input-field" id="authName" placeholder="Örn: Ahmet Yılmaz" autocomplete="name">
-      </div>
-
+      <p class="sub">Seni tanıyabilmemiz için telefon numaranı doğrulayacağız.</p>
       <div class="field">
         <div class="field-label">Telefon Numarası</div>
         <div class="phone-wrap">
           <div class="phone-prefix">+90</div>
-          <input type="tel" class="input-field" id="authPhone" placeholder="5XX XXX XX XX" inputmode="numeric" maxlength="13" autocomplete="tel-national">
+          <input type="tel" class="input-field" id="authPhone" placeholder="5XX XXX XX XX"
+            inputmode="numeric" maxlength="13" autocomplete="tel-national">
         </div>
       </div>
+      <button class="btn-primary" id="sendOtpBtn">Devam Et</button>
+    </div>
 
+    <!-- ADIM 2: Yeni kullanıcı bilgileri (modal gibi üste çıkar) -->
+    <div class="auth-card" id="registerCard" style="display:none">
+      <h2>Seni tanıyalım 👋</h2>
+      <p class="sub">Sistemde kaydın yok. Siparişlerinde seni tanıyabilmemiz için bilgilerini bırak.</p>
+      <div class="field">
+        <div class="field-label">Ad Soyad</div>
+        <input type="text" class="input-field" id="authName" placeholder="Örn: Ahmet Yılmaz" autocomplete="name">
+      </div>
       <label class="checkbox-row" id="kvkkRow">
         <div class="checkbox" id="kvkkBox"></div>
         <div class="checkbox-label">
           <a href="#" id="openKvkk">KVKK Aydınlatma Metni</a>'ni okudum ve <strong>kişisel verilerimin işlenmesini</strong> kabul ediyorum.
         </div>
       </label>
-
       <label class="checkbox-row" id="ticariRow">
         <div class="checkbox" id="ticariBox"></div>
         <div class="checkbox-label">
           Kampanya ve fırsatlardan <strong>SMS ile haberdar olmak istiyorum</strong> (opsiyonel).
         </div>
       </label>
-
-      <button class="btn-primary" id="sendOtpBtn">Kod Gönder</button>
+      <button class="btn-primary" id="registerContinueBtn">Kodu Gönder</button>
+      <button class="btn-text" id="backToPhoneBtn">← Numarayı Değiştir</button>
     </div>
 
-    <!-- OTP entry -->
+    <!-- ADIM 3: OTP -->
     <div class="auth-card" id="otpCard" style="display:none">
       <h2>Kodu Gir</h2>
       <p class="sub"><strong id="otpPhoneDisplay">—</strong> numarasına gönderilen 6 haneli kodu gir.</p>
-
       <div class="otp-grid" id="otpGrid"></div>
-
       <div class="otp-timer" id="otpTimer">Yeni kod isteyebilmek için <strong id="otpCountdown">60</strong> sn</div>
-
       <button class="btn-primary" id="verifyBtn" disabled>Doğrula</button>
       <button class="btn-text" id="resendBtn" disabled>Kodu Yeniden Gönder</button>
       <button class="btn-text" id="changePhoneBtn">← Numarayı Değiştir</button>
@@ -795,7 +801,7 @@ const state = {
   addresses:[],
   currentTab: 'menu',
   activeCategory: null,
-  otp: { phone: null, timerInterval: null, countdown: 60 },
+  otp: { phone: null, name: '', isNewUser: false, ticari: false, timerInterval: null, countdown: 60 },
 };
 
 const DAY_KEYS   = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
@@ -978,15 +984,21 @@ function initAuthScreen() {
   });
 
   // Send OTP
-  document.getElementById('sendOtpBtn').addEventListener('click', sendOTP);
+  document.getElementById('sendOtpBtn').addEventListener('click', checkPhoneAndContinue);
+  document.getElementById('registerContinueBtn')?.addEventListener('click', sendOTPFromRegister);
+  document.getElementById('backToPhoneBtn')?.addEventListener('click', () => {
+    document.getElementById('registerCard').style.display = 'none';
+    document.getElementById('phoneCard').style.display = 'flex';
+  });
 
   // OTP controls
   buildOTPInputs();
   document.getElementById('verifyBtn').addEventListener('click', verifyOTP);
-  document.getElementById('resendBtn').addEventListener('click', sendOTP);
+  document.getElementById('resendBtn').addEventListener('click', sendOTPDirect);
   document.getElementById('changePhoneBtn').addEventListener('click', () => {
     clearInterval(state.otp.timerInterval);
     document.getElementById('otpCard').style.display = 'none';
+    document.getElementById('registerCard').style.display = 'none';
     document.getElementById('phoneCard').style.display = 'flex';
   });
 }
@@ -1041,58 +1053,99 @@ function updateVerifyBtn() {
   document.getElementById('verifyBtn').disabled = getOTPValue().length !== 6;
 }
 
-async function sendOTP() {
-  const name  = document.getElementById('authName').value.trim();
+// ── ADIM 1: Telefon kontrol et — kayıtlıysa direkt OTP, değilse kayıt formu ──
+async function checkPhoneAndContinue() {
   const phone = document.getElementById('authPhone').value.replace(/\s/g, '');
-
-  // Validation
-  if (!name || name.length < 2) return toast('⚠️', 'Lütfen adınızı giriniz');
   if (!/^5\d{9}$/.test(phone)) return toast('⚠️', 'Geçerli bir telefon numarası giriniz');
+
+  const btn = document.getElementById('sendOtpBtn');
+  btn.disabled = true;
+  btn.textContent = 'Kontrol ediliyor…';
+
+  try {
+    // Sistemde kayıtlı mı kontrol et
+    const data = await api('/auth/check-phone', 'POST', { phone });
+
+    if (data.exists) {
+      // Kayıtlı kullanıcı → direkt OTP gönder
+      state.otp.phone = phone;
+      state.otp.isNewUser = false;
+      await sendOTPDirect();
+    } else {
+      // Yeni kullanıcı → kayıt formunu göster
+      state.otp.phone = phone;
+      state.otp.isNewUser = true;
+      document.getElementById('phoneCard').style.display = 'none';
+      document.getElementById('registerCard').style.display = 'flex';
+    }
+  } catch(e) {
+    toast('❌', 'Bir hata oluştu, tekrar dene');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Devam Et';
+  }
+}
+
+// ── ADIM 2a: Yeni kullanıcı kayıt formundan OTP gönder ──
+async function sendOTPFromRegister() {
+  const name = document.getElementById('authName').value.trim();
+  if (!name || name.length < 2) return toast('⚠️', 'Lütfen adınızı giriniz');
   if (!document.getElementById('kvkkBox').classList.contains('checked')) {
     return toast('⚠️', 'KVKK onayı zorunludur');
   }
+  state.otp.name = name;
+  state.otp.ticari = document.getElementById('ticariBox').classList.contains('checked');
+  await sendOTPDirect();
+}
 
-  const btn = document.getElementById('sendOtpBtn');
-  const origText = btn.textContent;
-  btn.disabled = true;
-  btn.textContent = 'Gönderiliyor…';
+// ── OTP gönder (hem yeni hem kayıtlı kullanıcı için) ──
+async function sendOTPDirect() {
+  const phone = state.otp.phone;
+  if (!phone) return;
 
   try {
     await api('/auth/send-otp', 'POST', { phone });
-    state.otp.phone = phone;
-    // Show OTP card
-    document.getElementById('phoneCard').style.display = 'none';
-    document.getElementById('otpCard').style.display = 'flex';
+
+    // OTP ekranına geç
+    document.getElementById('phoneCard').style.display    = 'none';
+    document.getElementById('registerCard').style.display = 'none';
+    document.getElementById('otpCard').style.display      = 'flex';
     document.getElementById('otpPhoneDisplay').textContent = '+90 ' + formatPhone(phone);
-    document.querySelectorAll('.otp-input').forEach(i => { i.value = ''; i.classList.remove('filled'); });
-    document.querySelectorAll('.otp-input')[0].focus();
+    document.querySelectorAll('.otp-input').forEach(i => i.value = '');
+    document.getElementById('otpGrid').querySelector('.otp-input')?.focus();
+    document.getElementById('verifyBtn').disabled = true;
     startOTPTimer();
-    toast('✅', 'Kod gönderildi');
-  } catch (e) {
-    toast('❌', e.message);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = origText;
+    toast('✅', 'Doğrulama kodu gönderildi');
+  } catch(e) {
+    toast('❌', e.message || 'Kod gönderilemedi');
   }
 }
 
+// ── Eski sendOTP alias (resend için) ──
+async function sendOTP() { await sendOTPDirect(); }
+
+// ── OTP geri sayım sayacı ──
 function startOTPTimer() {
   clearInterval(state.otp.timerInterval);
   state.otp.countdown = 60;
-  document.getElementById('resendBtn').disabled = true;
-  document.getElementById('otpCountdown').textContent = '60';
-  document.getElementById('otpTimer').style.display = 'block';
+  const countEl  = document.getElementById('otpCountdown');
+  const timerEl  = document.getElementById('otpTimer');
+  const resendBtn = document.getElementById('resendBtn');
+  if (countEl) countEl.textContent = '60';
+  if (timerEl) timerEl.style.display = 'block';
+  if (resendBtn) resendBtn.disabled = true;
 
   state.otp.timerInterval = setInterval(() => {
     state.otp.countdown--;
-    document.getElementById('otpCountdown').textContent = state.otp.countdown;
+    if (countEl) countEl.textContent = state.otp.countdown;
     if (state.otp.countdown <= 0) {
       clearInterval(state.otp.timerInterval);
-      document.getElementById('otpTimer').style.display = 'none';
-      document.getElementById('resendBtn').disabled = false;
+      if (timerEl) timerEl.style.display = 'none';
+      if (resendBtn) resendBtn.disabled = false;
     }
   }, 1000);
 }
+
 
 async function verifyOTP() {
   const code = getOTPValue();
@@ -1103,9 +1156,10 @@ async function verifyOTP() {
   btn.textContent = 'Doğrulanıyor…';
 
   try {
-    const name   = document.getElementById('authName').value.trim();
-    const kvkk   = document.getElementById('kvkkBox').classList.contains('checked');
-    const ticari = document.getElementById('ticariBox').classList.contains('checked');
+    // Yeni kullanıcı için kayıt formundan alınan bilgiler, kayıtlı kullanıcı için boş
+    const name   = state.otp.name   || '';
+    const kvkk   = state.otp.isNewUser ? document.getElementById('kvkkBox')?.classList.contains('checked') : true;
+    const ticari = state.otp.ticari || false;
 
     const data = await api('/auth/verify-otp', 'POST', {
       phone: state.otp.phone, code, name, kvkk, ticari
