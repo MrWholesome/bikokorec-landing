@@ -2103,24 +2103,52 @@ async function openPaytrIframe(orderId, email) {
 
     const modal  = document.getElementById('paytrModal');
     const iframe = document.getElementById('paytrFrame');
-    iframe.src   = 'https://www.paytr.com/odeme/guvenli/' + token;
+    // Capacitor/iOS WebView için src'yi önce temizle, sonra set et
+    iframe.src = '';
+    setTimeout(() => {
+      iframe.src = 'https://www.paytr.com/odeme/guvenli/' + token;
+    }, 100);
     modal.style.display = 'flex';
 
-    // PayTR'den ödeme sonucu mesajını dinle
+    // PayTR'den ödeme sonucu mesajını dinle (iFrame postMessage)
     function onPaytrMessage(e) {
       if (e.origin !== 'https://www.paytr.com') return;
-      const data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
-      if (data.status === 'success') {
-        closePaytrModal();
-        toast('✅', 'Ödeme başarılı! Siparişiniz onaylandı.');
-        setTimeout(() => renderTab('orders'), 1000);
-      } else if (data.status === 'failed') {
-        closePaytrModal();
-        toast('❌', 'Ödeme başarısız: ' + (data.reason || 'Tekrar deneyin'));
-      }
-      window.removeEventListener('message', onPaytrMessage);
+      try {
+        const data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
+        if (data.status === 'success') {
+          closePaytrModal();
+          window.removeEventListener('message', onPaytrMessage);
+          clearInterval(pollTimer);
+          toast('✅', 'Ödeme başarılı! Siparişiniz onaylandı.');
+          setTimeout(() => renderTab('orders'), 1000);
+        } else if (data.status === 'failed') {
+          closePaytrModal();
+          window.removeEventListener('message', onPaytrMessage);
+          clearInterval(pollTimer);
+          toast('❌', 'Ödeme başarısız, tekrar deneyin');
+        }
+      } catch(e) {}
     }
     window.addEventListener('message', onPaytrMessage);
+
+    // Fallback: iFrame postMessage çalışmazsa backend'i polling ile kontrol et
+    let pollTimer = setInterval(async () => {
+      try {
+        const r = await api('/paytr/check/' + orderId);
+        if (r.status === 'confirmed') {
+          closePaytrModal();
+          window.removeEventListener('message', onPaytrMessage);
+          clearInterval(pollTimer);
+          toast('✅', 'Ödeme başarılı! Siparişiniz onaylandı.');
+          setTimeout(() => renderTab('orders'), 1000);
+        } else if (r.status === 'payment_failed' || r.status === 'cancelled') {
+          closePaytrModal();
+          window.removeEventListener('message', onPaytrMessage);
+          clearInterval(pollTimer);
+          toast('❌', 'Ödeme alınamadı');
+        }
+      } catch(e) {}
+    }, 3000); // 3 saniyede bir kontrol
 
     document.getElementById('paytrModalClose').onclick = () => {
       closePaytrModal();
@@ -2165,6 +2193,8 @@ function playCustomerAlert() {
 }
 
 const STATUS_LABELS = {
+  pending_payment: 'Ödeme bekleniyor, lütfen ödemeyi tamamla',
+  payment_failed:  'Ödeme alınamadı, siparişin iptal edildi',
   pending:   'Siparişin alındı, onay bekleniyor',
   confirmed: 'Siparişin hazırlanıyor!',
   delivered: 'Siparişin teslim edildi, afiyet olsun!',
@@ -2207,7 +2237,7 @@ async function renderOrders(container) {
       return;
     }
 
-    const statusMap = { pending:{lbl:'⏳ Bekliyor',cls:'pending'}, confirmed:{lbl:'🔥 Hazırlanıyor',cls:'confirmed'}, delivered:{lbl:'✅ Teslim',cls:'delivered'}, cancelled:{lbl:'❌ İptal',cls:'cancelled'} };
+    const statusMap = { pending_payment:{lbl:'💳 Ödeme Bekleniyor',cls:'pending'}, payment_failed:{lbl:'❌ Ödeme Alınamadı',cls:'cancelled'}, pending:{lbl:'⏳ Bekliyor',cls:'pending'}, confirmed:{lbl:'🔥 Hazırlanıyor',cls:'confirmed'}, delivered:{lbl:'✅ Teslim',cls:'delivered'}, cancelled:{lbl:'❌ İptal',cls:'cancelled'} };
     const payMap    = { cash:'💵 Kapıda Nakit', card_door:'💳 Kapıda Kart', online:'📱 Online' };
 
     let html = '<h2 style="font-family:\'Lora\',serif;font-size:1.3rem;margin-bottom:14px">Siparişlerim</h2>';
