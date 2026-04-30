@@ -43,9 +43,11 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 
 /* ═══ SCROLL LOCK (modals open) ═══ */
 body.no-scroll{overflow:hidden;position:fixed;width:100%}
+* { scrollbar-width: none; }
+*::-webkit-scrollbar { display: none; }
 
 /* ═══ SCREENS ═══ */
-.screen{display:none;min-height:100vh;min-height:100dvh;flex-direction:column;padding-top:var(--safe-top);padding-bottom:var(--safe-bot)}
+.screen{display:none;min-height:100vh;min-height:100dvh;flex-direction:column;padding-bottom:var(--safe-bot)}
 .screen.active{display:flex}
 
 /* ═══════════════════════════════════════════════════
@@ -75,21 +77,24 @@ body.no-scroll{overflow:hidden;position:fixed;width:100%}
     radial-gradient(ellipse 60% 40% at 50% 0%,rgba(200,124,28,.12) 0%,transparent 60%),
     var(--bg0);
   padding:24px;
+  overflow:hidden;
+  position:fixed;inset:0;
+  height:100vh;height:100dvh;
 }
 .auth-inner{
-  display:flex;flex-direction:column;justify-content:space-between;
+  display:flex;flex-direction:column;justify-content:center;
   min-height:100vh;min-height:100dvh;
   max-width:480px;margin:0 auto;width:100%;
-  padding:max(env(safe-area-inset-top),32px) 16px max(env(safe-area-inset-bottom),28px);
+  padding:max(env(safe-area-inset-top),20px) 16px max(env(safe-area-inset-bottom),20px);
   gap:0;
 }
-.brand-big{text-align:center;padding-top:16px}
+.brand-big{text-align:center;padding-top:0;margin-bottom:20px}
 .brand-big .top-text{
   font-size:.8rem;color:var(--mist);letter-spacing:4px;font-weight:600;
   text-transform:uppercase;margin-bottom:8px;
 }
 .brand-big h1{
-  font-family:'Lora',serif;font-size:clamp(2.4rem,11vw,3.4rem);font-weight:600;
+  font-family:'Lora',serif;font-size:clamp(1.8rem,8vw,2.6rem);font-weight:600;
   line-height:.95;letter-spacing:-.03em;
 }
 .brand-big h1 em{font-style:italic;color:var(--ember);font-weight:700}
@@ -103,7 +108,7 @@ body.no-scroll{overflow:hidden;position:fixed;width:100%}
 
 .auth-card{
   background:var(--bg2);border:1px solid var(--veil);border-radius:var(--r-xl);
-  padding:24px 20px;display:flex;flex-direction:column;gap:14px;margin-top:20px;
+  padding:20px;display:flex;flex-direction:column;gap:12px;margin-top:0;
 }
 .auth-card h2{
   font-family:'Lora',serif;font-size:1.35rem;font-weight:600;
@@ -188,11 +193,11 @@ select.input-field option{background:var(--bg3);color:var(--cream)}
   position:sticky;top:0;z-index:50;
   background:rgba(6,4,2,.92);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
   border-bottom:1px solid var(--veil);
-  padding:14px 20px calc(14px + var(--safe-top)) 20px;
-  padding-top:calc(14px + var(--safe-top));
+  padding:8px 16px;
+  padding-top:calc(8px + var(--safe-top));
   display:flex;align-items:center;justify-content:space-between;
 }
-.header-brand{font-family:'Lora',serif;font-size:1.3rem;font-weight:600;line-height:1}
+.header-brand{font-family:'Lora',serif;font-size:1.1rem;font-weight:600;line-height:1}
 .header-brand em{font-style:italic;color:var(--ember)}
 .header-actions{display:flex;gap:6px;align-items:center}
 .icon-btn{
@@ -235,16 +240,14 @@ select.input-field option{background:var(--bg3);color:var(--cream)}
 
 /* Category chips */
 .cat-scroll{
-  display:flex;gap:8px;overflow-x:auto;padding:4px 0 12px;
-  margin:0 -16px 16px;padding-left:16px;padding-right:16px;
-  scrollbar-width:none;
+  display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;
 }
-.cat-scroll::-webkit-scrollbar{display:none}
 .cat-chip{
-  flex-shrink:0;padding:9px 16px;font-size:.75rem;font-weight:700;letter-spacing:.5px;
+  flex:1 1 calc(33% - 8px);min-width:90px;
+  padding:9px 8px;font-size:.73rem;font-weight:700;letter-spacing:.5px;
   border:1px solid var(--veil);border-radius:var(--r-full);
   color:var(--mist);background:transparent;transition:all .2s;
-  display:flex;align-items:center;gap:6px;white-space:nowrap;
+  display:flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap;
 }
 .cat-chip.active{background:var(--fire);border-color:var(--fire);color:#fff;box-shadow:0 4px 14px rgba(214,64,4,.3)}
 
@@ -286,18 +289,18 @@ select.input-field option{background:var(--bg3);color:var(--cream)}
   position:fixed;bottom:0;left:0;right:0;z-index:40;
   background:rgba(6,4,2,.96);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
   border-top:1px solid var(--veil);
-  padding:10px 16px calc(10px + var(--safe-bot)) 16px;
+  padding:6px 16px calc(6px + var(--safe-bot)) 16px;
   display:flex;justify-content:space-around;
   max-width:560px;margin:0 auto;
 }
 .nav-btn{
-  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
-  padding:6px;font-size:.62rem;font-weight:700;letter-spacing:.5px;
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:4px;font-size:.58rem;font-weight:700;letter-spacing:.5px;
   color:var(--mist);transition:color .2s;
   position:relative;
 }
 .nav-btn.active{color:var(--ember)}
-.nav-btn .nav-icon{font-size:1.3rem;line-height:1}
+.nav-btn .nav-icon{font-size:1.1rem;line-height:1}
 .nav-btn .nav-badge{
   position:absolute;top:0;right:22%;
   background:var(--fire);color:#fff;font-size:.55rem;font-weight:800;
@@ -337,7 +340,7 @@ select.input-field option{background:var(--bg3);color:var(--cream)}
   color:var(--mist);font-size:1rem;flex-shrink:0;
   display:flex;align-items:center;justify-content:center;
 }
-.sheet-body{flex:1;overflow-y:auto;padding:18px 20px;-webkit-overflow-scrolling:touch}
+.sheet-body{flex:1;overflow-y:auto;overflow-x:hidden;padding:18px 20px;-webkit-overflow-scrolling:touch;word-break:break-word;max-width:100%}
 .sheet-footer{
   padding:14px 20px;border-top:1px solid var(--veil);flex-shrink:0;
   background:rgba(6,4,2,.8);backdrop-filter:blur(12px);
@@ -377,7 +380,7 @@ select.input-field option{background:var(--bg3);color:var(--cream)}
 .option-btn{
   width:100%;padding:12px 14px;margin-bottom:6px;
   background:var(--bg2);border:1.5px solid var(--veil);border-radius:var(--r);
-  display:flex;align-items:center;justify-content:space-between;
+  display:flex;align-items:center;justify-content:center;
   text-align:left;font-size:.85rem;color:var(--cream);
   transition:all .15s;
 }
@@ -394,7 +397,7 @@ select.input-field option{background:var(--bg3);color:var(--cream)}
 .option-btn .left{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
 
 .qty-row{
-  display:flex;align-items:center;justify-content:space-between;
+  display:flex;align-items:center;justify-content:center;
   background:var(--bg2);border:1px solid var(--veil);border-radius:var(--r-lg);
   padding:10px 14px;margin-bottom:14px;
 }
@@ -417,7 +420,7 @@ select.input-field option{background:var(--bg3);color:var(--cream)}
 
 /* Add to cart button in sheet footer */
 .add-cart-btn{
-  width:100%;display:flex;align-items:center;justify-content:space-between;
+  width:100%;display:flex;align-items:center;justify-content:center;
   background:linear-gradient(135deg,var(--flame),var(--fire));
   color:#fff;border-radius:var(--r-lg);padding:15px 18px;
   font-weight:700;font-size:.9rem;box-shadow:0 6px 20px rgba(214,64,4,.3);
@@ -774,6 +777,37 @@ select.input-field option{background:var(--bg3);color:var(--cream)}
   </div>
 </div>
 
+
+  <!-- ── PayTR Email Modal ───────────────────────────────── -->
+  <div id="emailModal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);align-items:flex-end;justify-content:center">
+    <div style="background:var(--bg2);border-radius:var(--r-xl) var(--r-xl) 0 0;padding:24px 20px calc(24px + var(--safe-bot));width:100%;max-width:480px">
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="font-size:2rem">💳</div>
+        <div style="font-family:'Lora',serif;font-size:1.2rem;font-weight:700;margin-top:8px">Online Ödeme</div>
+        <div style="font-size:.82rem;color:var(--mist);margin-top:6px">PayTR güvenli ödeme altyapısı kullanılmaktadır.<br>Dekont için e-posta adresinizi girin.</div>
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:.75rem;font-weight:700;letter-spacing:.5px;color:var(--mist);display:block;margin-bottom:8px">E-POSTA ADRESİ</label>
+        <input id="paytrEmailInput" type="email" inputmode="email" placeholder="ornek@email.com"
+          style="width:100%;background:var(--bg3);border:1px solid var(--veil);border-radius:var(--r-lg);padding:14px 16px;color:var(--cream);font-size:1rem;box-sizing:border-box">
+      </div>
+      <button id="paytrEmailSubmit" class="btn-primary" style="width:100%;margin-bottom:12px">Ödemeye Geç →</button>
+      <button id="paytrEmailCancel" style="width:100%;background:none;border:none;color:var(--mist);font-size:.85rem;padding:8px;cursor:pointer">İptal</button>
+    </div>
+  </div>
+
+  <!-- ── PayTR iFrame Modal ─────────────────────────────── -->
+  <div id="paytrModal" style="display:none;position:fixed;inset:0;z-index:210;background:rgba(0,0,0,.85);align-items:center;justify-content:center;padding:16px">
+    <div style="background:#fff;border-radius:var(--r-xl);width:100%;max-width:480px;overflow:hidden;position:relative">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg1)">
+        <span style="font-size:.85rem;font-weight:700;color:var(--cream)">🔒 Güvenli Ödeme</span>
+        <button id="paytrModalClose" style="background:none;border:none;color:var(--mist);font-size:1.4rem;cursor:pointer;line-height:1">×</button>
+      </div>
+      <iframe id="paytrFrame" src="" frameborder="0" scrolling="yes"
+        style="width:100%;height:500px;display:block"></iframe>
+    </div>
+  </div>
+
 </body>
 <script>
 
@@ -781,13 +815,8 @@ select.input-field option{background:var(--bg3);color:var(--cream)}
    Bi' Kokoreç — Müşteri Uygulaması
    ═══════════════════════════════════════════════════ */
 
-// Backend adresi — hem localhost hem canlı desteği
-const API = (function() {
-  const h = window.location.hostname;
-  if (h === 'localhost' || h === '127.0.0.1') return 'http://localhost:3000';
-  if (h === 'api.bikokorec.com.tr') return '';            // backend'i de aynı domain'de servis ediyorsa
-  return 'https://api.bikokorec.com.tr';                  // varsayılan canlı
-})();
+// Backend adresi
+const API = 'https://api.bikokorec.com.tr';
 
 /* ═══ GLOBAL STATE ═══ */
 const state = {
@@ -1320,11 +1349,42 @@ function renderMenu(container) {
       ${items || '<div class="empty-state"><div class="ico">🍽️</div><div class="txt">Bu kategoride ürün yok</div></div>'}
     </div>`;
 
-  // Category chip click
+  // Category chip click - sayfayı başa atmadan sadece içeriği güncelle
   container.querySelectorAll('.cat-chip').forEach(chip => {
     chip.addEventListener('click', function() {
+      const scrollY = document.getElementById('mainContent').scrollTop;
       state.activeCategory = this.dataset.cat;
-      renderMenu(container);
+      // Sadece chip aktifliğini güncelle
+      container.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+      this.classList.add('active');
+      // Sadece menü bölümünü güncelle
+      const cats = state.menu.categories || [];
+      const activeCat = cats.find(c => c.key === state.activeCategory) || cats[0];
+      const items = (activeCat?.items || []).map(item => `
+        <div class="item-card" data-item-id="${item.id}">
+          <div class="item-emoji">${item.emoji}</div>
+          <div class="item-info">
+            <div class="item-name">${item.name}</div>
+            <div class="item-desc">${(item.description && !item.description.startsWith("items:")) ? item.description : ""}</div>
+            <div class="item-price-row">
+              <div class="item-price">${item.base_price} ₺</div>
+              <button class="item-add">+</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+      const section = container.querySelector('.menu-section');
+      if (section) {
+        section.innerHTML = `<div class="section-title"><span class="emoji">${activeCat?.emoji}</span>${activeCat?.label}</div>` +
+          (items || '<div class="empty-state"><div class="ico">🍽️</div><div class="txt">Bu kategoride ürün yok</div></div>');
+        // Item click → detail sheet
+        section.querySelectorAll('.item-card').forEach(card => {
+          card.addEventListener('click', function() {
+            openItemDetail(parseInt(this.dataset.itemId));
+          });
+        });
+      }
+      document.getElementById('mainContent').scrollTop = scrollY;
     });
   });
 
@@ -1995,14 +2055,90 @@ async function checkout() {
 
     state.cart = [];
     saveCart();
-    toast('✅', `Sipariş alındı! #${result.order_id}`);
-    setTimeout(() => renderTab('orders'), 800);
+
+    if (selectedPayment === 'online') {
+      // Online ödeme: sipariş oluştu, şimdi PayTR email modal aç
+      openPaytrEmailModal(result.order_id, result.total);
+    } else {
+      toast('✅', `Sipariş alındı! #${result.order_id}`);
+      setTimeout(() => renderTab('orders'), 800);
+    }
   } catch (e) {
     toast('❌', e.message);
   } finally {
     btn.disabled = false;
     btn.textContent = 'Siparişi Tamamla';
   }
+}
+
+// ── PayTR Email Modal ─────────────────────────────────────
+function openPaytrEmailModal(orderId, total) {
+  const modal = document.getElementById('emailModal');
+  modal.style.display = 'flex';
+  document.getElementById('paytrEmailInput').value = '';
+  document.getElementById('paytrEmailInput').focus();
+
+  document.getElementById('paytrEmailCancel').onclick = () => {
+    modal.style.display = 'none';
+    toast('ℹ️', `Sipariş #${orderId} alındı, ödeme daha sonra yapılabilir`);
+    setTimeout(() => renderTab('orders'), 800);
+  };
+
+  document.getElementById('paytrEmailSubmit').onclick = async () => {
+    const email = document.getElementById('paytrEmailInput').value.trim();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return toast('⚠️', 'Geçerli bir e-posta adresi girin');
+    }
+    modal.style.display = 'none';
+    await openPaytrIframe(orderId, email);
+  };
+}
+
+// ── PayTR iFrame Modal ────────────────────────────────────
+async function openPaytrIframe(orderId, email) {
+  try {
+    toast('⏳', 'Ödeme hazırlanıyor…');
+    const result = await api('/paytr/token', 'POST', { order_id: orderId, email });
+    const token  = result.token;
+
+    const modal  = document.getElementById('paytrModal');
+    const iframe = document.getElementById('paytrFrame');
+    iframe.src   = 'https://www.paytr.com/odeme/guvenli/' + token;
+    modal.style.display = 'flex';
+
+    // PayTR'den ödeme sonucu mesajını dinle
+    function onPaytrMessage(e) {
+      if (e.origin !== 'https://www.paytr.com') return;
+      const data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
+      if (data.status === 'success') {
+        closePaytrModal();
+        toast('✅', 'Ödeme başarılı! Siparişiniz onaylandı.');
+        setTimeout(() => renderTab('orders'), 1000);
+      } else if (data.status === 'failed') {
+        closePaytrModal();
+        toast('❌', 'Ödeme başarısız: ' + (data.reason || 'Tekrar deneyin'));
+      }
+      window.removeEventListener('message', onPaytrMessage);
+    }
+    window.addEventListener('message', onPaytrMessage);
+
+    document.getElementById('paytrModalClose').onclick = () => {
+      closePaytrModal();
+      window.removeEventListener('message', onPaytrMessage);
+      toast('ℹ️', 'Ödeme iptal edildi');
+      renderTab('orders');
+    };
+
+  } catch(e) {
+    toast('❌', 'Ödeme başlatılamadı: ' + e.message);
+  }
+}
+
+function closePaytrModal() {
+  const modal  = document.getElementById('paytrModal');
+  const iframe = document.getElementById('paytrFrame');
+  modal.style.display = 'none';
+  iframe.src = '';
 }
 
 /* ═══════════════════════════════════════════════════
@@ -2182,7 +2318,8 @@ async function renderProfile(container) {
       </div>
     </div>
 
-    <button class="option-btn" id="logoutBtn" style="color:var(--red);justify-content:center;margin-top:16px">🚪 Çıkış Yap</button>
+    <button class="option-btn" id="deleteAccountBtn" style="color:var(--mist);justify-content:center;margin-top:8px;border:1px solid var(--veil)">🗑️ Hesabımı Sil</button>
+    <button class="option-btn" id="logoutBtn" style="color:var(--red);justify-content:center;margin-top:8px">🚪 Çıkış Yap</button>
   `;
 
   container.innerHTML = html;
@@ -2224,6 +2361,12 @@ async function renderProfile(container) {
   });
   document.getElementById('pfZones').addEventListener('click', () => {
     showZonesSheet();
+  });
+
+  document.getElementById('deleteAccountBtn').addEventListener('click', () => {
+    if (confirm('Hesabınızı silmek istediğinizden emin misiniz?\n\nHesap silme talebiniz iletişim sayfamız üzerinden gerçekleştirilecektir.')) {
+      window.open('https://bikokorec.com.tr/iletisim', '_blank');
+    }
   });
 
   document.getElementById('logoutBtn').addEventListener('click', () => {
@@ -2428,13 +2571,14 @@ async function saveAddress() {
 ═══════════════════════════════════════════════════ */
 function showInfo(title, text) {
   document.getElementById('infoSheetTitle').textContent = title;
-  // Render with proper line breaks and spacing
   const body = document.getElementById('infoSheetBody');
+  body.style.overflowX = 'hidden';
+  body.style.maxWidth = '100%';
   body.innerHTML = text
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     .split('\n\n').map(para => {
       if (!para.trim()) return '';
-      return '<p style="margin-bottom:14px;line-height:1.7">' +
+      return '<p style="margin-bottom:12px;line-height:1.7;word-break:break-word;max-width:100%">' +
         para.trim().split('\n').join('<br>') +
         '</p>';
     }).join('');
@@ -2527,5 +2671,36 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 </script>
+
+  <!-- ── PayTR Email Modal ───────────────────────────────── -->
+  <div id="emailModal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);align-items:flex-end;justify-content:center">
+    <div style="background:var(--bg2);border-radius:var(--r-xl) var(--r-xl) 0 0;padding:24px 20px calc(24px + var(--safe-bot));width:100%;max-width:480px">
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="font-size:2rem">💳</div>
+        <div style="font-family:'Lora',serif;font-size:1.2rem;font-weight:700;margin-top:8px">Online Ödeme</div>
+        <div style="font-size:.82rem;color:var(--mist);margin-top:6px">PayTR güvenli ödeme altyapısı kullanılmaktadır.<br>Dekont için e-posta adresinizi girin.</div>
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:.75rem;font-weight:700;letter-spacing:.5px;color:var(--mist);display:block;margin-bottom:8px">E-POSTA ADRESİ</label>
+        <input id="paytrEmailInput" type="email" inputmode="email" placeholder="ornek@email.com"
+          style="width:100%;background:var(--bg3);border:1px solid var(--veil);border-radius:var(--r-lg);padding:14px 16px;color:var(--cream);font-size:1rem;box-sizing:border-box">
+      </div>
+      <button id="paytrEmailSubmit" class="btn-primary" style="width:100%;margin-bottom:12px">Ödemeye Geç →</button>
+      <button id="paytrEmailCancel" style="width:100%;background:none;border:none;color:var(--mist);font-size:.85rem;padding:8px;cursor:pointer">İptal</button>
+    </div>
+  </div>
+
+  <!-- ── PayTR iFrame Modal ─────────────────────────────── -->
+  <div id="paytrModal" style="display:none;position:fixed;inset:0;z-index:210;background:rgba(0,0,0,.85);align-items:center;justify-content:center;padding:16px">
+    <div style="background:#fff;border-radius:var(--r-xl);width:100%;max-width:480px;overflow:hidden;position:relative">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg1)">
+        <span style="font-size:.85rem;font-weight:700;color:var(--cream)">🔒 Güvenli Ödeme</span>
+        <button id="paytrModalClose" style="background:none;border:none;color:var(--mist);font-size:1.4rem;cursor:pointer;line-height:1">×</button>
+      </div>
+      <iframe id="paytrFrame" src="" frameborder="0" scrolling="yes"
+        style="width:100%;height:500px;display:block"></iframe>
+    </div>
+  </div>
+
 </body>
 </html>
