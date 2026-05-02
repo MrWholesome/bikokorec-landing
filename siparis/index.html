@@ -817,6 +817,7 @@ select.input-field option{background:var(--bg3);color:var(--cream)}
 
 // Backend adresi
 const API = 'https://api.bikokorec.com.tr';
+const CURRENT_VERSION = '1.1'; // Her yeni build'de güncelle
 
 /* ═══ GLOBAL STATE ═══ */
 const state = {
@@ -1035,15 +1036,37 @@ function initAuthScreen() {
 function buildOTPInputs() {
   const grid = document.getElementById('otpGrid');
   grid.innerHTML = '';
+
   for (let i = 0; i < 6; i++) {
     const inp = document.createElement('input');
     inp.type = 'tel';
-    inp.maxLength = 1;
-    inp.className = 'otp-input';
     inp.inputMode = 'numeric';
     inp.pattern = '[0-9]*';
+    inp.className = 'otp-input';
+    // iOS otomatik doldurma için — sadece ilk kutuya ver, maxLength 6 yap
+    if (i === 0) {
+      inp.autocomplete = 'one-time-code';
+      inp.maxLength = 6;
+    } else {
+      inp.autocomplete = 'off';
+      inp.maxLength = 1;
+    }
     inp.addEventListener('input', function(e) {
-      const v = e.target.value.replace(/\D/g, '').slice(0, 1);
+      const val = e.target.value.replace(/\D/g, '');
+      if (i === 0 && val.length > 1) {
+        // iOS kısayolundan 6 hane geldi — tüm kutulara dağıt
+        const digits = val.slice(0, 6);
+        for (let j = 0; j < 6; j++) {
+          const box = grid.children[j];
+          box.value = digits[j] || '';
+          box.classList.toggle('filled', !!digits[j]);
+        }
+        grid.children[Math.min(digits.length, 5)].focus();
+        updateVerifyBtn();
+        if (digits.length === 6) verifyOTP();
+        return;
+      }
+      const v = val.slice(0, 1);
       e.target.value = v;
       if (v) {
         e.target.classList.add('filled');
@@ -1056,6 +1079,8 @@ function buildOTPInputs() {
     inp.addEventListener('keydown', function(e) {
       if (e.key === 'Backspace' && !e.target.value && i > 0) {
         grid.children[i - 1].focus();
+        grid.children[i - 1].value = '';
+        grid.children[i - 1].classList.remove('filled');
       }
     });
     inp.addEventListener('paste', function(e) {
@@ -1261,6 +1286,45 @@ async function enterApp() {
         if (e.message.includes('Oturum')) return; // logged out already
       }
     }
+
+    // Push notification token kaydet (Capacitor)
+    try {
+      if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+        const { PushNotifications } = Capacitor.Plugins;
+        if (PushNotifications) {
+          const perm = await PushNotifications.requestPermissions();
+          if (perm.receive === 'granted') {
+            await PushNotifications.register();
+            PushNotifications.addListener('registration', async (tokenData) => {
+              try { await api('/customers/device-token', 'POST', { token: tokenData.value }); } catch(e) {}
+            });
+            PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+              if (action.notification.data?.order_id) setTimeout(() => renderTab('orders'), 300);
+            });
+          }
+        }
+      }
+    } catch(e) {}
+
+    // Heartbeat — 5 dakikada bir last_seen güncelle
+    if (state.token) {
+      setInterval(async () => {
+        try { await api('/customers/heartbeat', 'POST', {}); } catch(e) {}
+      }, 5 * 60 * 1000);
+    }
+
+    // Versiyon kontrolü
+    try {
+      const vData = await api('/version');
+      const serverVersion = vData.version || '1.0';
+      const isOld = serverVersion !== CURRENT_VERSION;
+      if (isOld || vData.force_update) {
+        const modal = document.getElementById('updateModal');
+        document.getElementById('updateMessage').textContent = vData.message || 'Lütfen uygulamayı güncelleyin.';
+        modal.style.display = 'flex';
+        if (vData.force_update) return; // Zorla güncelleme — devam etme
+      }
+    } catch(e) {}
 
     showScreen('mainScreen');
     updateStatus();
@@ -1772,7 +1836,13 @@ function addToCart() {
 /* ═══════════════════════════════════════════════════
    CART TAB
 ═══════════════════════════════════════════════════ */
-function renderCart(container) {
+async function renderCart(container) {
+  // Her açılışta business verisini taze çek (indirim anlık değişsin)
+  try {
+    const freshBiz = await api('/menu');
+    if (freshBiz && freshBiz.business) state.business = freshBiz.business;
+  } catch(e) {}
+
   if (!state.cart.length) {
     container.innerHTML = `
       <div class="empty-cart">
@@ -2292,6 +2362,7 @@ async function renderProfile(container) {
       <div class="profile-info">
         <div class="profile-name">${c.name || 'Misafir'}</div>
         <div class="profile-phone">+90 ${formatPhone((c.phone||'').replace(/^90/,''))}</div>
+        ${c.email ? `<div style="font-size:.72rem;color:var(--mist);margin-top:3px">✉️ ${c.email}</div>` : ''}
       </div>
     </div>
 
@@ -2325,6 +2396,11 @@ async function renderProfile(container) {
         <div class="pr-icon">📞</div>
         <div class="pr-label">${biz.business_phone || ''}</div>
         <div class="pr-arrow">📱</div>
+      </div>
+      <div class="profile-row" id="pfWhatsapp" style="cursor:pointer">
+        <div class="pr-icon">💬</div>
+        <div class="pr-label" style="color:#25D366;font-weight:600">WhatsApp'tan Bize Ulaşın</div>
+        <div class="pr-arrow" style="font-size:.75rem">↗</div>
       </div>
     </div>
 
@@ -2388,6 +2464,12 @@ async function renderProfile(container) {
   document.getElementById('pfCall').addEventListener('click', () => {
     const phone = (state.business && state.business.business_phone) ? state.business.business_phone : '';
     if (phone) window.location.href = 'tel:' + phone;
+  });
+  document.getElementById('pfWhatsapp').addEventListener('click', () => {
+    const phone = (state.business && state.business.business_phone) 
+      ? state.business.business_phone.replace(/^0/, '90').replace(/[^0-9]/g, '')
+      : '902661234567';
+    window.open('https://wa.me/' + phone, '_blank');
   });
   document.getElementById('pfZones').addEventListener('click', () => {
     showZonesSheet();
@@ -2732,5 +2814,17 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
   </div>
 
+
+  <!-- Version Update Modal -->
+  <div id="updateModal" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.85);backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:20px">
+    <div style="background:var(--bg2);border:1.5px solid rgba(214,100,4,.4);border-radius:20px;padding:28px 24px;max-width:340px;width:100%;text-align:center">
+      <div style="font-size:2.5rem;margin-bottom:12px">🔄</div>
+      <div style="font-family:'Lora',serif;font-size:1.2rem;font-weight:700;color:var(--cream);margin-bottom:8px">Güncelleme Mevcut</div>
+      <div id="updateMessage" style="font-size:.82rem;color:var(--mist);line-height:1.6;margin-bottom:20px"></div>
+      <button id="updateBtn" onclick="window.open('https://apps.apple.com/tr/app/bi-kokore%C3%A7/id6764330326','_blank')" style="width:100%;background:linear-gradient(135deg,#E85010,#D64004);color:#fff;border:none;border-radius:12px;padding:14px;font-size:.95rem;font-weight:700;cursor:pointer">
+        App Store'dan Güncelle
+      </button>
+    </div>
+  </div>
 </body>
 </html>
