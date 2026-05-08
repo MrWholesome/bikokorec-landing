@@ -47,7 +47,7 @@ body.no-scroll{overflow:hidden;position:fixed;width:100%}
 *::-webkit-scrollbar { display: none; }
 
 /* ═══ SCREENS ═══ */
-.screen{display:none;min-height:100vh;min-height:100dvh;flex-direction:column;padding-bottom:var(--safe-bot)}
+.screen{display:none;height:100vh;height:100dvh;flex-direction:column;padding-bottom:var(--safe-bot);overflow:hidden}
 .screen.active{display:flex}
 
 /* ═══════════════════════════════════════════════════
@@ -193,9 +193,12 @@ select.input-field option{background:var(--bg3);color:var(--cream)}
   position:sticky;top:0;z-index:50;
   background:rgba(6,4,2,.92);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
   border-bottom:1px solid var(--veil);
-  padding:8px 16px;
+  display:flex;flex-direction:column;
   padding-top:calc(8px + var(--safe-top));
+}
+.top-header-row{
   display:flex;align-items:center;justify-content:space-between;
+  padding:8px 16px;
 }
 .header-brand{font-family:'Lora',serif;font-size:1.1rem;font-weight:600;line-height:1}
 .header-brand em{font-style:italic;color:var(--ember)}
@@ -220,7 +223,7 @@ select.input-field option{background:var(--bg3);color:var(--cream)}
 #mainScreen{display:none}
 #mainScreen.active{display:flex}
 
-.main-content{flex:1;padding:16px 16px 120px 16px;overflow-y:auto;max-width:560px;margin:0 auto;width:100%}
+.main-content{flex:1;padding:16px 16px 120px 16px;overflow-y:auto;max-width:560px;margin:0 auto;width:100%;position:relative;scroll-behavior:smooth}
 
 .hero{
   background:linear-gradient(135deg,rgba(232,80,16,.08) 0%,rgba(200,124,28,.05) 100%);
@@ -240,8 +243,11 @@ select.input-field option{background:var(--bg3);color:var(--cream)}
 
 /* Category chips */
 .cat-scroll{
-  display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;
+  display:flex;flex-wrap:nowrap;gap:8px;margin-bottom:0;
+  overflow-x:auto;-webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
 }
+.cat-scroll::-webkit-scrollbar{display:none;}
 .cat-chip{
   flex:1 1 calc(33% - 8px);min-width:90px;
   padding:9px 8px;font-size:.73rem;font-weight:700;letter-spacing:.5px;
@@ -684,10 +690,14 @@ select.input-field option{background:var(--bg3);color:var(--cream)}
 <!-- ═══ MAIN APP SCREEN ═══ -->
 <div id="mainScreen" class="screen">
   <div class="top-header">
-    <div class="header-brand">Bi' <em>Kokoreç</em></div>
-    <div class="header-actions">
-      <div class="status-pill" id="statusPill">—</div>
+    <div class="top-header-row">
+      <div class="header-brand">Bi' <em>Kokoreç</em></div>
+      <div class="header-actions">
+        <div class="status-pill" id="statusPill">—</div>
+        <button id="notifClearBtn" onclick="toggleNotifPanel()" style="background:none;border:none;cursor:pointer;padding:4px 6px;font-size:1.15rem;opacity:0.7;-webkit-tap-highlight-color:transparent;position:relative" aria-label="Bildirimler">🔔<span id="notifBadge" style="display:none;position:absolute;top:0;right:0;background:#e85010;color:#fff;border-radius:50%;font-size:.55rem;font-weight:700;min-width:14px;height:14px;line-height:14px;text-align:center;padding:0 2px">0</span></button>
+      </div>
     </div>
+    <div id="catScrollBar" style="display:none;padding:4px 16px 8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;display:none;text-align:center;white-space:nowrap"></div>
   </div>
 
   <div class="main-content" id="mainContent"></div>
@@ -817,7 +827,7 @@ select.input-field option{background:var(--bg3);color:var(--cream)}
 
 // Backend adresi
 const API = 'https://api.bikokorec.com.tr';
-const CURRENT_VERSION = '1.1'; // Her yeni build'de güncelle
+const CURRENT_VERSION = '1.2'; // Her yeni build'de güncelle
 
 /* ═══ GLOBAL STATE ═══ */
 const state = {
@@ -1281,30 +1291,12 @@ async function enterApp() {
       try {
         const me = await api('/customers/me');
         state.customer = { ...state.customer, ...me };
-        // Profile doesn't return cash_payment_disabled yet — we'll just assume payment options from customer row
       } catch(e) {
-        if (e.message.includes('Oturum')) return; // logged out already
+        // Sadece gerçek oturum hatalarında çık, diğer hatalarda devam et
+        if (e.status === 401 || (e.message && e.message.includes('Oturum süresi'))) return;
+        // Diğer hatalar (network vs) push init'i engellemez
       }
     }
-
-    // Push notification token kaydet (Capacitor)
-    try {
-      if (window.Capacitor && window.Capacitor.isNativePlatform()) {
-        const { PushNotifications } = Capacitor.Plugins;
-        if (PushNotifications) {
-          const perm = await PushNotifications.requestPermissions();
-          if (perm.receive === 'granted') {
-            await PushNotifications.register();
-            PushNotifications.addListener('registration', async (tokenData) => {
-              try { await api('/customers/device-token', 'POST', { token: tokenData.value }); } catch(e) {}
-            });
-            PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
-              if (action.notification.data?.order_id) setTimeout(() => renderTab('orders'), 300);
-            });
-          }
-        }
-      }
-    } catch(e) {}
 
     // Heartbeat — 5 dakikada bir last_seen güncelle
     if (state.token) {
@@ -1313,20 +1305,23 @@ async function enterApp() {
       }, 5 * 60 * 1000);
     }
 
-    // Versiyon kontrolü
+    showScreen('mainScreen');
+
+    // Versiyon kontrolü — push init'ten sonra yap ki return push'u engellesin
     try {
       const vData = await api('/version');
+      // review_mode=true ise versiyon kontrolü atla (App Store incelemesi için)
+      if (!vData.review_mode) {
       const serverVersion = vData.version || '1.0';
       const isOld = serverVersion !== CURRENT_VERSION;
       if (isOld || vData.force_update) {
         const modal = document.getElementById('updateModal');
         document.getElementById('updateMessage').textContent = vData.message || 'Lütfen uygulamayı güncelleyin.';
         modal.style.display = 'flex';
-        if (vData.force_update) return; // Zorla güncelleme — devam etme
+        if (vData.force_update) return;
       }
+      } // end !review_mode
     } catch(e) {}
-
-    showScreen('mainScreen');
     updateStatus();
     renderTab('menu');
     updateCartBadge();
@@ -1337,9 +1332,132 @@ async function enterApp() {
 
     // Start polling for order status changes
     startOrderPolling();
+
+    // Push notification — enterApp bittikten sonra başlat
+    if (state.token) initPushNotifications();
+    // Badge güncelle
+    setTimeout(_updateNotifBadge, 100);
   } catch (e) {
     toast('❌', 'Menü yüklenemedi: ' + e.message);
   }
+}
+
+// ── Bildirim sistemi ──
+let _notifList = JSON.parse(localStorage.getItem('bk_notifs') || '[]');
+
+function _saveNotifs() { localStorage.setItem('bk_notifs', JSON.stringify(_notifList.slice(0,50))); }
+
+function addNotif(title, body) {
+  _notifList.unshift({ title, body, time: Date.now(), read: false });
+  _saveNotifs();
+  _updateNotifBadge();
+}
+
+function _updateNotifBadge() {
+  const unread = _notifList.filter(n => !n.read).length;
+  const badge = document.getElementById('notifBadge');
+  const btn = document.getElementById('notifClearBtn');
+  if (!badge) return;
+  if (unread > 0) {
+    badge.textContent = unread > 9 ? '9+' : unread;
+    badge.style.display = 'block';
+    if (btn) btn.style.opacity = '1';
+  } else {
+    badge.style.display = 'none';
+    if (btn) btn.style.opacity = '0.7';
+  }
+}
+
+function toggleNotifPanel() {
+  let panel = document.getElementById('notifPanel');
+  if (panel) { panel.remove(); return; }
+
+  // Mark all read
+  _notifList.forEach(n => n.read = true);
+  _saveNotifs();
+  _updateNotifBadge();
+
+  panel = document.createElement('div');
+  panel.id = 'notifPanel';
+  panel.style.cssText = 'position:fixed;top:56px;right:10px;left:10px;z-index:999;background:#1a1208;border:1px solid rgba(255,255,255,.12);border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.6);max-height:60vh;display:flex;flex-direction:column;overflow:hidden';
+
+  const header = `<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.08)"><span style="font-size:.8rem;font-weight:700;letter-spacing:1px;color:#a89070">BİLDİRİMLER</span><button onclick="clearAllNotifs()" style="background:rgba(232,80,16,.15);border:1px solid rgba(232,80,16,.4);border-radius:8px;color:#e85010;font-size:.78rem;font-weight:700;cursor:pointer;padding:6px 14px">Tümünü Temizle</button></div>`;
+
+  let listHtml = '';
+  if (_notifList.length === 0) {
+    listHtml = '<div style="padding:24px;text-align:center;font-size:.82rem;color:#6b5a40">Bildirim yok</div>';
+  } else {
+    listHtml = _notifList.map(n => {
+      const d = new Date(n.time);
+      const timeStr = d.toLocaleDateString('tr-TR', {day:'2-digit',month:'2-digit'}) + ' ' + d.toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'});
+      return `<div style="padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.05)"><div style="font-size:.82rem;font-weight:600;color:#f0e8dc;margin-bottom:2px">${n.title}</div><div style="font-size:.78rem;color:#c8b898;margin-bottom:3px">${n.body}</div><div style="font-size:.65rem;color:#6b5a40">${timeStr}</div></div>`;
+    }).join('');
+  }
+
+  panel.innerHTML = header + `<div style="overflow-y:auto;flex:1">${listHtml}</div>`;
+  document.body.appendChild(panel);
+
+  // Dışarı tıklayınca kapat
+  setTimeout(() => {
+    document.addEventListener('click', function closePanel(e) {
+      if (!panel.contains(e.target) && e.target.id !== 'notifClearBtn') {
+        panel.remove();
+        document.removeEventListener('click', closePanel);
+      }
+    });
+  }, 100);
+}
+
+function clearAllNotifs() {
+  _notifList = [];
+  _saveNotifs();
+  _updateNotifBadge();
+  try {
+    if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+      const Push = window.Capacitor.Plugins.PushNotifications;
+      if (Push) Push.removeAllDeliveredNotifications().catch(() => {});
+    }
+  } catch(e) {}
+  document.getElementById('notifPanel')?.remove();
+}
+
+function clearNotifications() { clearAllNotifs(); }
+
+async function initPushNotifications() {
+  if (!window.Capacitor || !window.Capacitor.isNativePlatform()) return;
+  // Badge sıfırla
+  try {
+    const Push2 = window.Capacitor.Plugins.PushNotifications;
+    if (Push2) Push2.removeAllDeliveredNotifications().catch(() => {});
+  } catch(e) {}
+  const Push = window.Capacitor.Plugins.PushNotifications;
+  if (!Push) return;
+
+  Push.addListener('registration', async (t) => {
+    const token = t.registration || t.value || t;
+    try {
+      await api('/customers/device-token', 'POST', { token });
+    } catch(e) {}
+  });
+
+  Push.addListener('registrationError', (err) => {});
+
+  Push.addListener('pushNotificationReceived', (notification) => {
+    addNotif(notification.title || "Bi' Kokoreç", notification.body || '');
+  });
+
+  Push.addListener('pushNotificationActionPerformed', (action) => {
+    const n = action.notification;
+    addNotif(n.title || "Bi' Kokoreç", n.body || '');
+    document.getElementById('notifPanel')?.remove();
+  });
+
+  try {
+    const perm = await Push.requestPermissions();
+    if (perm.receive === 'granted' || perm.receive === 'prompt-with-rationale') {
+      await Push.register();
+    }
+  } catch(e) {}
 }
 
 function updateStatus() {
@@ -1361,6 +1479,8 @@ function renderTab(tab) {
   document.querySelectorAll('.nav-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.tab === tab);
   });
+  const csb = document.getElementById('catScrollBar');
+  if (csb) csb.style.display = tab === 'menu' ? 'block' : 'none';
   const content = document.getElementById('mainContent');
   if (tab === 'menu')     renderMenu(content);
   if (tab === 'cart')     renderCart(content);
@@ -1371,6 +1491,59 @@ function renderTab(tab) {
 /* ═══════════════════════════════════════════════════
    MENU TAB
 ═══════════════════════════════════════════════════ */
+// ── Scroll & category chip logic ────────────────────────────
+let _menuScrollBound = false;
+let _scrollTimer;
+
+function scrollToCategory(key) {
+  const mc = document.getElementById('mainContent');
+  if (!mc) return;
+  const section = mc.querySelector('[data-cat-section="' + key + '"]');
+  if (!section) return;
+  state.activeCategory = key;
+  _updateCatChips(key);
+  // offsetTop relative to mainContent (position:relative)
+  mc.scrollTo({ top: section.offsetTop - 8, behavior: 'smooth' });
+}
+
+function _updateCatChips(key) {
+  const catScrollBar = document.getElementById('catScrollBar');
+  if (!catScrollBar) return;
+  catScrollBar.querySelectorAll('.cat-chip').forEach(function(c) {
+    c.classList.toggle('active', c.dataset.cat === key);
+  });
+  const active = catScrollBar.querySelector('.cat-chip[data-cat="' + key + '"]');
+  if (active) active.scrollIntoView({ block: 'nearest', inline: 'center' });
+}
+
+function _bindMenuScroll() {
+  const mc = document.getElementById('mainContent');
+  if (!mc) return;
+  if (_menuScrollBound) { mc.removeEventListener('scroll', _onMenuScroll); }
+  mc.addEventListener('scroll', _onMenuScroll, { passive: true });
+  _menuScrollBound = true;
+}
+
+function _onMenuScroll() {
+  clearTimeout(_scrollTimer);
+  _scrollTimer = setTimeout(function() {
+    const mc = document.getElementById('mainContent');
+    if (!mc) return;
+    const sections = mc.querySelectorAll('[data-cat-section]');
+    if (!sections.length) return;
+    let current = sections[0].dataset.catSection;
+    sections.forEach(function(sec) {
+      if (sec.offsetTop <= mc.scrollTop + 100) {
+        current = sec.dataset.catSection;
+      }
+    });
+    if (current !== state.activeCategory) {
+      state.activeCategory = current;
+      _updateCatChips(current);
+    }
+  }, 40);
+}
+
 function renderMenu(container) {
   if (!state.menu) return;
   const cats = state.menu.categories || [];
@@ -1379,86 +1552,56 @@ function renderMenu(container) {
   const hero = `
     <div class="hero">
       <div class="hero-greeting">${state.customer?.name ? 'Hoş geldin' : 'Merhaba'}</div>
-      <div class="hero-name">${state.customer?.name || 'Misafir'}<em>${state.customer?.name ? '' : ''}</em></div>
+      <div class="hero-name">${state.customer?.name || 'Misafir'}<em></em></div>
       <div class="hero-hours">${getTodayHoursText()}</div>
     </div>`;
 
-  const chips = `
-    <div class="cat-scroll">
-      ${cats.map(c => `
-        <button class="cat-chip ${c.key === state.activeCategory ? 'active' : ''}" data-cat="${c.key}">
-          <span>${c.emoji}</span>${c.label}
-        </button>
-      `).join('')}
-    </div>`;
-
-  const activeCat = cats.find(c => c.key === state.activeCategory) || cats[0];
-  const items = (activeCat?.items || []).map(item => `
-    <div class="item-card" data-item-id="${item.id}">
-      <div class="item-emoji">${item.emoji}</div>
-      <div class="item-info">
-        <div class="item-name">${item.name}</div>
-        <div class="item-desc">${(item.description && !item.description.startsWith("items:")) ? item.description : ""}</div>
-        <div class="item-price-row">
-          <div class="item-price">${item.base_price} ₺</div>
-          <button class="item-add">+</button>
-        </div>
-      </div>
-    </div>
-  `).join('');
-
-  container.innerHTML = hero + chips + `
-    <div class="menu-section">
-      <div class="section-title"><span class="emoji">${activeCat?.emoji}</span>${activeCat?.label}</div>
-      ${items || '<div class="empty-state"><div class="ico">🍽️</div><div class="txt">Bu kategoride ürün yok</div></div>'}
-    </div>`;
-
-  // Category chip click - sayfayı başa atmadan sadece içeriği güncelle
-  container.querySelectorAll('.cat-chip').forEach(chip => {
-    chip.addEventListener('click', function() {
-      const scrollY = document.getElementById('mainContent').scrollTop;
-      state.activeCategory = this.dataset.cat;
-      // Sadece chip aktifliğini güncelle
-      container.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
-      this.classList.add('active');
-      // Sadece menü bölümünü güncelle
-      const cats = state.menu.categories || [];
-      const activeCat = cats.find(c => c.key === state.activeCategory) || cats[0];
-      const items = (activeCat?.items || []).map(item => `
-        <div class="item-card" data-item-id="${item.id}">
-          <div class="item-emoji">${item.emoji}</div>
-          <div class="item-info">
-            <div class="item-name">${item.name}</div>
-            <div class="item-desc">${(item.description && !item.description.startsWith("items:")) ? item.description : ""}</div>
-            <div class="item-price-row">
-              <div class="item-price">${item.base_price} ₺</div>
-              <button class="item-add">+</button>
-            </div>
+  const allSections = cats.map(cat => {
+    const items = (cat.items || []).map(item => `
+      <div class="item-card" data-item-id="${item.id}">
+        <div class="item-emoji">${item.emoji}</div>
+        <div class="item-info">
+          <div class="item-name">${item.name}</div>
+          <div class="item-desc">${(item.description && !item.description.startsWith("items:")) ? item.description : ""}</div>
+          <div class="item-price-row">
+            <div class="item-price">${item.base_price} ₺</div>
+            <button class="item-add">+</button>
           </div>
         </div>
-      `).join('');
-      const section = container.querySelector('.menu-section');
-      if (section) {
-        section.innerHTML = `<div class="section-title"><span class="emoji">${activeCat?.emoji}</span>${activeCat?.label}</div>` +
-          (items || '<div class="empty-state"><div class="ico">🍽️</div><div class="txt">Bu kategoride ürün yok</div></div>');
-        // Item click → detail sheet
-        section.querySelectorAll('.item-card').forEach(card => {
-          card.addEventListener('click', function() {
-            openItemDetail(parseInt(this.dataset.itemId));
-          });
-        });
-      }
-      document.getElementById('mainContent').scrollTop = scrollY;
+      </div>
+    `).join('');
+    return `
+      <div class="menu-section" data-cat-section="${cat.key}">
+        <div class="section-title"><span class="emoji">${cat.emoji}</span>${cat.label}</div>
+        ${items || '<div class="empty-state"><div class="ico">🍽️</div><div class="txt">Bu kategoride ürün yok</div></div>'}
+      </div>`;
+  }).join('');
+
+  container.innerHTML = hero + allSections;
+
+  // Chip bar'ı doldur
+  const catScrollBar = document.getElementById('catScrollBar');
+  if (catScrollBar) {
+    catScrollBar.style.display = 'block';
+    catScrollBar.innerHTML = cats.map(cat =>
+      '<button class="cat-chip ' + (cat.key === state.activeCategory ? 'active' : '') + '" data-cat="' + cat.key + '" style="display:inline-flex;flex-shrink:0;margin-right:6px;white-space:nowrap"><span>' + cat.emoji + '</span>' + cat.label + '</button>'
+    ).join('');
+    catScrollBar.querySelectorAll('.cat-chip').forEach(function(chip) {
+      chip.addEventListener('click', function() { scrollToCategory(this.dataset.cat); });
     });
-  });
+  }
+
+  // Scroll listener bağla
+  _bindMenuScroll();
 
   // Item click → detail sheet
-  container.querySelectorAll('.item-card').forEach(card => {
+  container.querySelectorAll('.item-card').forEach(function(card) {
     card.addEventListener('click', function() {
       openItemDetail(parseInt(this.dataset.itemId));
     });
   });
 }
+
 
 /* ═══════════════════════════════════════════════════
    ITEM DETAIL SHEET
@@ -2543,39 +2686,50 @@ function openAddrSheet() {
     <div class="addr-form">
       <div class="field">
         <div class="field-label">Adres Başlığı <span style="color:var(--red)">*</span></div>
-        <input type="text" class="input-field" id="addrTitle" placeholder="Ev, İş, Okul vs.">
+        <input type="text" class="input-field" id="addrTitle" value="Ev" placeholder="Ev, İş, Okul vs.">
       </div>
       <div class="field">
         <div class="field-label">İlçe <span style="color:var(--red)">*</span></div>
-        <select class="input-field" id="addrIlce" style="cursor:pointer">
-          <option value="">İlçe seçin...</option>
-          ${ilceler.map(i => '<option value="' + i + '">' + i + '</option>').join('')}
-        </select>
+        <div style="position:relative">
+          <input type="text" class="input-field" id="addrIlceSearch" placeholder="İlçe ara veya seç..." autocomplete="off"
+            style="padding-right:32px">
+          <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--mist);pointer-events:none">▾</span>
+        </div>
+        <div id="addrIlceList" style="display:none;background:var(--bg3);border:1px solid var(--veil);border-radius:8px;max-height:180px;overflow-y:auto;margin-top:4px;z-index:10;position:relative"></div>
+        <input type="hidden" id="addrIlce">
       </div>
       <div class="field">
         <div class="field-label">Mahalle <span style="color:var(--red)">*</span></div>
-        <select class="input-field" id="addrMahalle" disabled style="cursor:pointer;opacity:.5">
-          <option value="">Önce ilçe seçin...</option>
-        </select>
+        <div style="position:relative">
+          <input type="text" class="input-field" id="addrMahalleSearch" placeholder="Önce ilçe seçin..." autocomplete="off"
+            style="padding-right:32px" disabled>
+          <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--mist);pointer-events:none">▾</span>
+        </div>
+        <div id="addrMahalleList" style="display:none;background:var(--bg3);border:1px solid var(--veil);border-radius:8px;max-height:180px;overflow-y:auto;margin-top:4px;z-index:10;position:relative"></div>
+        <input type="hidden" id="addrMahalle">
       </div>
       <div class="field">
         <div class="field-label">Sokak / Cadde <span style="color:var(--red)">*</span></div>
-        <select class="input-field" id="addrSokak" disabled style="cursor:pointer;opacity:.5">
-          <option value="">Önce mahalle seçin...</option>
-        </select>
+        <div style="position:relative">
+          <input type="text" class="input-field" id="addrSokakSearch" placeholder="Önce mahalle seçin..." autocomplete="off"
+            style="padding-right:32px" disabled>
+          <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--mist);pointer-events:none">▾</span>
+        </div>
+        <div id="addrSokakList" style="display:none;background:var(--bg3);border:1px solid var(--veil);border-radius:8px;max-height:180px;overflow-y:auto;margin-top:4px;z-index:10;position:relative"></div>
+        <input type="hidden" id="addrSokak">
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
         <div class="field">
           <div class="field-label">Bina No <span style="color:var(--red)">*</span></div>
-          <input type="text" class="input-field" id="addrBina" placeholder="5">
+          <input type="text" class="input-field" id="addrBina" placeholder="5" inputmode="numeric">
         </div>
         <div class="field">
           <div class="field-label">Kat <span style="color:var(--red)">*</span></div>
-          <input type="text" class="input-field" id="addrKat" placeholder="2">
+          <input type="text" class="input-field" id="addrKat" placeholder="2" inputmode="numeric">
         </div>
         <div class="field">
           <div class="field-label">Daire No <span style="color:var(--red)">*</span></div>
-          <input type="text" class="input-field" id="addrDaire" placeholder="4">
+          <input type="text" class="input-field" id="addrDaire" placeholder="4" inputmode="numeric">
         </div>
       </div>
       <div class="field">
@@ -2592,41 +2746,83 @@ function openAddrSheet() {
   document.getElementById('addrSheet').classList.add('show');
   document.body.classList.add('no-scroll');
 
-  // Cascade: ilce secince mahalleler dolsun
-  document.getElementById('addrIlce').addEventListener('change', function() {
-    const ilce = this.value;
-    const mahSel = document.getElementById('addrMahalle');
-    const sokSel = document.getElementById('addrSokak');
-    mahSel.innerHTML = '<option value="">Mahalle seçin...</option>';
-    sokSel.innerHTML = '<option value="">Önce mahalle seçin...</option>';
-    sokSel.disabled = true;
-    sokSel.style.opacity = '.5';
-    if (!ilce) { mahSel.disabled = true; mahSel.style.opacity = '.5'; return; }
-    const mahalleler = Object.keys(ADRES_DATA[ilce] || {}).sort();
-    mahalleler.forEach(m => {
-      const opt = document.createElement('option');
-      opt.value = m; opt.textContent = m;
-      mahSel.appendChild(opt);
+  // Yardımcı: arama listesi oluştur
+  function makeSearchList(inputId, listId, hiddenId, items, onSelect) {
+    const inp = document.getElementById(inputId);
+    const list = document.getElementById(listId);
+    const hidden = document.getElementById(hiddenId);
+
+    function showList(filtered) {
+      if (!filtered.length) { list.style.display = 'none'; return; }
+      list.innerHTML = '';
+      filtered.forEach(v => {
+        const div = document.createElement('div');
+        div.textContent = v;
+        div.style.cssText = 'padding:10px 14px;cursor:pointer;font-size:.85rem;color:var(--cream);border-bottom:1px solid var(--veil)';
+        div.addEventListener('mousedown', e => e.preventDefault());
+        div.addEventListener('click', () => {
+          inp.value = v;
+          hidden.value = v;
+          list.style.display = 'none';
+          if (onSelect) onSelect(v);
+        });
+        list.appendChild(div);
+      });
+      list.style.display = 'block';
+    }
+
+    inp.addEventListener('focus', () => {
+      const q = inp.value.trim().toUpperCase();
+      showList(q ? items.filter(v => v.toUpperCase().includes(q)) : items);
     });
-    mahSel.disabled = false;
-    mahSel.style.opacity = '1';
+    inp.addEventListener('input', () => {
+      const q = inp.value.trim().toUpperCase();
+      hidden.value = '';
+      showList(q ? items.filter(v => v.toUpperCase().includes(q)) : items);
+    });
+    inp.addEventListener('blur', () => {
+      setTimeout(() => { list.style.display = 'none'; }, 150);
+    });
+  }
+  // İlçe arama
+  const ilceler2 = Object.keys(ADRES_DATA).sort();
+  makeSearchList('addrIlceSearch', 'addrIlceList', 'addrIlce', ilceler2, function(ilce) {
+    // Mahalleyi sıfırla
+    const mahInp = document.getElementById('addrMahalleSearch');
+    const mahHidden = document.getElementById('addrMahalle');
+    const sokInp = document.getElementById('addrSokakSearch');
+    const sokHidden = document.getElementById('addrSokak');
+    mahInp.value = ''; mahHidden.value = '';
+    sokInp.value = ''; sokHidden.value = '';
+    document.getElementById('addrMahalleList').style.display = 'none';
+    document.getElementById('addrSokakList').style.display = 'none';
+
+    const mahalleler = Object.keys(ADRES_DATA[ilce] || {}).sort();
+    mahInp.disabled = false; mahInp.placeholder = 'Mahalle ara...';
+    makeSearchList('addrMahalleSearch', 'addrMahalleList', 'addrMahalle', mahalleler, function(mah) {
+      // Sokağı sıfırla
+      sokInp.value = ''; sokHidden.value = '';
+      document.getElementById('addrSokakList').style.display = 'none';
+      const sokaklar = (ADRES_DATA[ilce] && ADRES_DATA[ilce][mah]) ? [...ADRES_DATA[ilce][mah]].sort() : [];
+      sokInp.disabled = false; sokInp.placeholder = 'Sokak / Cadde ara...';
+      makeSearchList('addrSokakSearch', 'addrSokakList', 'addrSokak', sokaklar, function() {
+        // Sokak seçilince Bina No'ya focus
+        setTimeout(() => document.getElementById('addrBina').focus(), 100);
+      });
+      setTimeout(() => document.getElementById('addrSokakSearch').focus(), 100);
+    });
+    setTimeout(() => document.getElementById('addrMahalleSearch').focus(), 100);
   });
 
-  // Cascade: mahalle secince sokaklar dolsun
-  document.getElementById('addrMahalle').addEventListener('change', function() {
-    const ilce = document.getElementById('addrIlce').value;
-    const mah  = this.value;
-    const sokSel = document.getElementById('addrSokak');
-    sokSel.innerHTML = '<option value="">Sokak / Cadde seçin...</option>';
-    if (!mah) { sokSel.disabled = true; sokSel.style.opacity = '.5'; return; }
-    const sokaklar = (ADRES_DATA[ilce] && ADRES_DATA[ilce][mah]) ? [...ADRES_DATA[ilce][mah]].sort() : [];
-    sokaklar.forEach(s => {
-      const opt = document.createElement('option');
-      opt.value = s; opt.textContent = s;
-      sokSel.appendChild(opt);
-    });
-    sokSel.disabled = false;
-    sokSel.style.opacity = '1';
+  // Bina → Kat → Daire sıralı focus
+  document.getElementById('addrBina').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); document.getElementById('addrKat').focus(); }
+  });
+  document.getElementById('addrKat').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); document.getElementById('addrDaire').focus(); }
+  });
+  document.getElementById('addrDaire').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); document.getElementById('addrNote').focus(); }
   });
 
   // Varsayilan checkbox
