@@ -491,7 +491,7 @@ select.input-field option{background:var(--bg3);color:var(--cream)}
 }
 .pay-btn.selected{border-color:var(--ember);background:var(--bg3)}
 .pay-btn.disabled{opacity:.4;pointer-events:none}
-.pay-icon{font-size:1.3rem;width:36px;text-align:center}
+.pay-icon{font-size:28px;width:36px;display:flex;align-items:center;justify-content:center}
 .pay-info{flex:1}
 .pay-name{font-size:.88rem;font-weight:600}
 .pay-desc{font-size:.68rem;color:var(--mist);margin-top:2px}
@@ -812,9 +812,10 @@ select.input-field option{background:var(--bg3);color:var(--cream)}
         <div style="font-size:.82rem;color:var(--mist);margin-top:6px">PayTR güvenli ödeme altyapısı kullanılmaktadır.<br>Dekont için e-posta adresinizi girin.</div>
       </div>
       <div style="margin-bottom:16px">
-        <label style="font-size:.75rem;font-weight:700;letter-spacing:.5px;color:var(--mist);display:block;margin-bottom:8px">E-POSTA ADRESİ</label>
-        <input id="paytrEmailInput" type="email" inputmode="email" placeholder="ornek@email.com"
+        <label style="font-size:.75rem;font-weight:700;letter-spacing:.5px;color:var(--mist);display:block;margin-bottom:8px">E-POSTA ADRESİ <span style="color:#e05555">*</span></label>
+        <input id="paytrEmailInput" type="email" inputmode="email" placeholder="ornek@email.com" required
           style="width:100%;background:var(--bg3);border:1px solid var(--veil);border-radius:var(--r-lg);padding:14px 16px;color:var(--cream);font-size:1rem;box-sizing:border-box">
+        <div id="paytrEmailError" style="font-size:.78rem;color:#e05555;margin-top:6px;display:none"></div>
       </div>
       <button id="paytrEmailSubmit" class="btn-primary" style="width:100%;margin-bottom:12px">Ödemeye Geç →</button>
       <button id="paytrEmailCancel" style="width:100%;background:none;border:none;color:var(--mist);font-size:.85rem;padding:8px;cursor:pointer">İptal</button>
@@ -841,7 +842,18 @@ select.input-field option{background:var(--bg3);color:var(--cream)}
    ═══════════════════════════════════════════════════ */
 
 // Backend adresi
-const API = 'https://api.bikokorec.com.tr';
+const API = 'https://api-dev.bikokorec.com.tr';
+
+// SEC-FIX: INJ-03 — escape all user-controlled data before inserting into innerHTML
+function escapeHTML(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 const CURRENT_VERSION = '1.3'; // Her yeni build'de güncelle
 function redirectToStore() {
    var ua = navigator.userAgent || '';
@@ -1413,7 +1425,8 @@ function toggleNotifPanel() {
     listHtml = _notifList.map(n => {
       const d = new Date(n.time);
       const timeStr = d.toLocaleDateString('tr-TR', {day:'2-digit',month:'2-digit'}) + ' ' + d.toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'});
-      return `<div style="padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.05)"><div style="font-size:.82rem;font-weight:600;color:#f0e8dc;margin-bottom:2px">${n.title}</div><div style="font-size:.78rem;color:#c8b898;margin-bottom:3px">${n.body}</div><div style="font-size:.65rem;color:#6b5a40">${timeStr}</div></div>`;
+      // SEC-FIX: INJ-03 — escape notification data from localStorage before innerHTML
+      return `<div style="padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.05)"><div style="font-size:.82rem;font-weight:600;color:#f0e8dc;margin-bottom:2px">${escapeHTML(n.title)}</div><div style="font-size:.78rem;color:#c8b898;margin-bottom:3px">${escapeHTML(n.body)}</div><div style="font-size:.65rem;color:#6b5a40">${timeStr}</div></div>`;
     }).join('');
   }
 
@@ -1575,19 +1588,20 @@ function renderMenu(container) {
   const hero = `
     <div class="hero">
       <div class="hero-greeting">${state.customer?.name ? 'Hoş geldin' : 'Merhaba'}</div>
-      <div class="hero-name">${state.customer?.name || 'Misafir'}<em></em></div>
+      <div class="hero-name">${escapeHTML(state.customer?.name || 'Misafir')}<em></em></div>
       <div class="hero-hours">${getTodayHoursText()}</div>
     </div>`;
 
   const allSections = cats.map(cat => {
+    // SEC-FIX: INJ-03 — escape menu data from API before innerHTML
     const items = (cat.items || []).map(item => `
       <div class="item-card" data-item-id="${item.id}">
-        <div class="item-emoji">${item.emoji}</div>
+        <div class="item-emoji">${escapeHTML(item.emoji)}</div>
         <div class="item-info">
-          <div class="item-name">${item.name}</div>
-          <div class="item-desc">${(item.description && !item.description.startsWith("items:")) ? item.description : ""}</div>
+          <div class="item-name">${escapeHTML(item.name)}</div>
+          <div class="item-desc">${(item.description && !item.description.startsWith("items:")) ? escapeHTML(item.description) : ""}</div>
           <div class="item-price-row">
-            <div class="item-price">${item.base_price} ₺</div>
+            <div class="item-price">${escapeHTML(String(item.base_price))} ₺</div>
             <button class="item-add">+</button>
           </div>
         </div>
@@ -1595,7 +1609,7 @@ function renderMenu(container) {
     `).join('');
     return `
       <div class="menu-section" data-cat-section="${cat.key}">
-        <div class="section-title"><span class="emoji">${cat.emoji}</span>${cat.label}</div>
+        <div class="section-title"><span class="emoji">${escapeHTML(cat.emoji)}</span>${escapeHTML(cat.label)}</div>
         ${items || '<div class="empty-state"><div class="ico">🍽️</div><div class="txt">Bu kategoride ürün yok</div></div>'}
       </div>`;
   }).join('');
@@ -1711,9 +1725,9 @@ function renderItemSheet() {
 
   let html = `
     <div class="detail-hero">
-      <div class="detail-emoji">${item.emoji}</div>
-      <div class="detail-name">${item.name}</div>
-      <div class="detail-desc">${(item.description && !item.description.startsWith("items:")) ? item.description : ""}</div>
+      <div class="detail-emoji">${escapeHTML(item.emoji)}</div>
+      <div class="detail-name">${escapeHTML(item.name)}</div>
+      <div class="detail-desc">${(item.description && !item.description.startsWith("items:")) ? escapeHTML(item.description) : ""}</div>
       <div class="detail-price">${item.base_price} ₺</div>
     </div>`;
 
@@ -1740,9 +1754,9 @@ function renderItemSheet() {
         if (!g || !sel) return;
         if (g.type === 'single' && sel) {
           const opt = g.options.find(o => o.key === sel);
-          if (opt) prevParts.push(opt.label);
+          if (opt) prevParts.push(escapeHTML(opt.label));
         } else if (Array.isArray(sel) && sel.length) {
-          sel.forEach(k => { const opt = g.options.find(o => o.key === k); if (opt) prevParts.push(opt.label); });
+          sel.forEach(k => { const opt = g.options.find(o => o.key === k); if (opt) prevParts.push(escapeHTML(opt.label)); });
         }
       });
       const preview = prevParts.length ? prevParts.join(', ') : '';
@@ -1764,7 +1778,7 @@ function renderItemSheet() {
 
         html += '<div style="margin-bottom:10px">' +
           '<div style="font-size:.65rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;' +
-          'color:var(--ember);margin-bottom:5px">' + g.label +
+          'color:var(--ember);margin-bottom:5px">' + escapeHTML(g.label) +
           (g.required ? ' <span style="color:var(--red);font-size:.55rem">Zorunlu</span>' : '') + '</div>';
 
         g.options.forEach(opt => {
@@ -1777,7 +1791,7 @@ function renderItemSheet() {
           html += '<button class="option-btn ' + (selected ? 'selected' : '') + '" ' +
             'data-group="' + sk + '" data-realgroup="' + gk + '" data-opt="' + opt.key + '" data-type="' + g.type + '" ' +
             'style="margin-bottom:4px">' +
-            '<div class="left"><div class="check"></div><span>' + opt.label + '</span></div>' +
+            '<div class="left"><div class="check"></div><span>' + escapeHTML(opt.label) + '</span></div>' +
             (priceLabel ? '<span class="opt-price">' + priceLabel + '</span>' : '') +
             '</button>';
         });
@@ -1793,7 +1807,7 @@ function renderItemSheet() {
       if (!g) return;
       const sel = sheetState.selections[gk];
       let selLabel = '';
-      if (sel) { const opt = g.options.find(o => o.key === sel); if (opt) selLabel = opt.label; }
+      if (sel) { const opt = g.options.find(o => o.key === sel); if (opt) selLabel = escapeHTML(opt.label); }
       const isOpen = sheetState.openGroups && sheetState.openGroups.has(gk);
 
       html += '<div class="option-group ' + (isOpen ? 'open' : '') + '" data-gkey="' + gk + '">' +
@@ -1810,7 +1824,7 @@ function renderItemSheet() {
         const selected   = sel === opt.key;
         html += '<button class="option-btn ' + (selected ? 'selected' : '') + '" ' +
           'data-group="' + gk + '" data-realgroup="' + gk + '" data-opt="' + opt.key + '" data-type="single">' +
-          '<div class="left"><div class="check"></div><span>' + opt.label + '</span></div>' +
+          '<div class="left"><div class="check"></div><span>' + escapeHTML(opt.label) + '</span></div>' +
           (priceLabel ? '<span class="opt-price">' + priceLabel + '</span>' : '') +
           '</button>';
       });
@@ -1826,21 +1840,21 @@ function renderItemSheet() {
       let selLabel = '';
       if (g.type === 'single' && sel) {
         const opt = g.options.find(o => o.key === sel);
-        if (opt) selLabel = opt.label;
+        if (opt) selLabel = escapeHTML(opt.label);
       } else if (g.type === 'multi' && Array.isArray(sel) && sel.length) {
-        selLabel = sel.map(k => g.options.find(o => o.key === k)?.label).filter(Boolean).join(', ');
+        selLabel = sel.map(k => g.options.find(o => o.key === k)?.label).filter(Boolean).map(escapeHTML).join(', ');
       }
       const isOpen = sheetState.openGroups && sheetState.openGroups.has(gKey);
 
       html += '<div class="option-group ' + (isOpen ? 'open' : '') + '" data-gkey="' + gKey + '">' +
         '<div class="option-group-header">' +
-          '<div class="option-group-title">' + g.label + '</div>' +
+          '<div class="option-group-title">' + escapeHTML(g.label) + '</div>' +
           (g.required ? '<div class="option-group-req">Zorunlu</div>' : '') +
           (selLabel ? '<div class="option-group-selected">' + selLabel + '</div>' : '') +
           '<div class="option-group-arrow">▾</div>' +
         '</div>' +
         '<div class="option-group-body">' +
-        (g.note ? '<div class="option-group-note">' + g.note + '</div>' : '');
+        (g.note ? '<div class="option-group-note">' + escapeHTML(g.note) + '</div>' : '');
 
       g.options.forEach(opt => {
         const optPrice   = getOptionPrice(item, gKey, opt.key);
@@ -1851,7 +1865,7 @@ function renderItemSheet() {
 
         html += '<button class="option-btn ' + (selected ? 'selected' : '') + '" ' +
           'data-group="' + gKey + '" data-realgroup="' + gKey + '" data-opt="' + opt.key + '" data-type="' + g.type + '">' +
-          '<div class="left"><div class="check"></div><span>' + opt.label + '</span></div>' +
+          '<div class="left"><div class="check"></div><span>' + escapeHTML(opt.label) + '</span></div>' +
           (priceLabel ? '<span class="opt-price">' + priceLabel + '</span>' : '') +
           '</button>';
       });
@@ -1875,7 +1889,7 @@ function renderItemSheet() {
       <div class="option-group-arrow">▾</div>
     </div>
     <div class="option-group-body">
-      <textarea class="note-input" id="itemNote" placeholder="Mutfağa iletmek istediğin bir şey var mı?" maxlength="200">${sheetState.note}</textarea>
+      <textarea class="note-input" id="itemNote" placeholder="Mutfağa iletmek istediğin bir şey var mı?" maxlength="200">${escapeHTML(sheetState.note)}</textarea>
     </div>
   </div>`;
 
@@ -2024,11 +2038,11 @@ async function renderCart(container) {
   state.cart.forEach((item, idx) => {
     const total = item.total * item.qty;
     html += `<div class="cart-item" data-idx="${idx}">
-      <div class="cart-item-emoji">${item.emoji}</div>
+      <div class="cart-item-emoji">${escapeHTML(item.emoji)}</div>
       <div class="cart-item-info">
-        <div class="cart-item-name">${item.name}</div>
-        ${item.sel_labels?.length ? `<div class="cart-item-opts">${item.sel_labels.join(' · ')}</div>` : ''}
-        ${item.note ? `<div class="cart-item-opts" style="color:var(--amber);font-style:italic">📝 ${item.note}</div>` : ''}
+        <div class="cart-item-name">${escapeHTML(item.name)}</div>
+        ${item.sel_labels?.length ? `<div class="cart-item-opts">${item.sel_labels.map(escapeHTML).join(' · ')}</div>` : ''}
+        ${item.note ? `<div class="cart-item-opts" style="color:var(--amber);font-style:italic">📝 ${escapeHTML(item.note)}</div>` : ''}
       </div>
       <div class="cart-item-right">
         <div class="cart-item-price">${total} ₺</div>
@@ -2047,32 +2061,42 @@ async function renderCart(container) {
   const discPct   = payConf2 ? (typeof payConf2 === 'number' ? payConf2 : (payConf2.discount || 0)) : 0;
   const discAmt   = discPct > 0 ? Math.round(subtotal * discPct / 100 * 100) / 100 : 0;
 
-  // Delivery fee from selected address neighborhood
-  let deliveryFee = 0;
-  let minBasket   = 0;
-  if (selectedAddressId && state.addresses && state.addresses.length) {
-    const selAddr = state.addresses.find(a => a.id === selectedAddressId);
-    if (selAddr && state.business && state.business.delivery_zones) {
-      // Extract neighborhood from full_address (first part before first comma)
-      const firstPart = selAddr.full_address.split(',')[0].trim();
-      const zone = state.business.delivery_zones[firstPart];
-      if (zone) {
-        deliveryFee = zone.delivery_fee || 0;
-        minBasket   = zone.min_basket   || 0;
-      }
-    }
-  }
+  // Global delivery settings
+  const orderMinimum   = (state.business && state.business.order_minimum)   || 0;
+  const deliveryMargin = (state.business && state.business.delivery_margin) || 0;
+  const globalFee      = (state.business && state.business.delivery_fee)    || 0;
+
+  const deliveryFee  = (deliveryMargin > 0 && subtotal < deliveryMargin) ? globalFee : 0;
+  const freeDelivery = deliveryMargin > 0 && subtotal >= deliveryMargin;
+  const belowMin     = orderMinimum > 0 && subtotal < orderMinimum;
+  const toFree       = deliveryMargin > 0 && subtotal < deliveryMargin ? Math.round((deliveryMargin - subtotal) * 100) / 100 : 0;
+  const toMin        = orderMinimum > 0 && subtotal < orderMinimum ? Math.round((orderMinimum - subtotal) * 100) / 100 : 0;
 
   const afterDiscount = Math.max(0, Math.round((subtotal - discAmt) * 100) / 100);
   const finalTotal    = Math.round((afterDiscount + deliveryFee) * 100) / 100;
-  const belowMin      = minBasket > 0 && subtotal < minBasket;
+
+  const progressBar = (deliveryMargin > 0 && !freeDelivery && !belowMin) ? (() => {
+    const pct = Math.min(100, Math.round(subtotal / deliveryMargin * 100));
+    return `<div style="margin:10px 0 4px">
+      <div style="height:4px;border-radius:2px;background:var(--veil);overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:var(--green);transition:width .3s"></div>
+      </div>
+      <div style="font-size:.65rem;color:var(--mist);margin-top:4px;text-align:center">
+        🚚 ${toFree} ₺ daha ekle → ücretsiz teslimat
+      </div>
+    </div>`;
+  })() : '';
 
   html += `
     <div class="cart-summary">
       <div class="summary-row"><span class="lbl">Ara Toplam</span><span class="val">${subtotal} ₺</span></div>
       ${discAmt > 0 ? `<div class="summary-row" style="color:var(--green)"><span class="lbl">🎉 İndirim (%${discPct})</span><span class="val">-${discAmt} ₺</span></div>` : ''}
-      ${deliveryFee > 0 ? `<div class="summary-row"><span class="lbl">🚚 Teslimat</span><span class="val">${deliveryFee} ₺</span></div>` : deliveryFee === 0 && minBasket > 0 ? '<div class="summary-row" style="color:var(--green)"><span class="lbl">🚚 Teslimat</span><span class="val">Ücretsiz</span></div>' : ''}
-      ${belowMin ? `<div class="summary-row" style="color:var(--red);font-size:.72rem"><span>⚠️ Min. sepet ${minBasket} ₺ — ${minBasket - subtotal} ₺ daha ekle</span></div>` : ''}
+      ${globalFee > 0 ? (freeDelivery
+        ? `<div class="summary-row" style="color:var(--green)"><span class="lbl">🚚 Teslimat</span><span class="val">Ücretsiz 🎉</span></div>`
+        : `<div class="summary-row"><span class="lbl">🚚 Teslimat</span><span class="val">${deliveryFee} ₺</span></div>`)
+      : ''}
+      ${progressBar}
+      ${belowMin ? `<div class="summary-row" style="color:var(--red);font-size:.72rem;padding:6px 0"><span>⚠️ Min. sipariş ${orderMinimum} ₺ — ${toMin} ₺ daha ekle</span></div>` : ''}
       <div class="summary-row total"><span>Toplam</span><span class="val">${finalTotal} ₺</span></div>
     </div>
 
@@ -2094,8 +2118,8 @@ async function renderCart(container) {
       <textarea class="note-input" id="orderNote" placeholder="Teslimat için not ekle (kapı kodu, kat vs.)" maxlength="200"></textarea>
     </div>
 
-    <button class="btn-primary" id="checkoutBtn" style="margin-top:16px">
-      ${belowMin ? '⚠️ Min. Sepet: ' + minBasket + ' ₺' : 'Siparişi Tamamla — ' + finalTotal + ' ₺'}
+    <button class="btn-primary" id="checkoutBtn" ${belowMin ? 'disabled' : ''} style="margin-top:16px${belowMin ? ';opacity:.5' : ''}">
+      ${belowMin ? '⚠️ Min. Sipariş: ' + orderMinimum + ' ₺' : 'Siparişi Tamamla — ' + finalTotal + ' ₺'}
     </button>
 
     <div style="font-size:.65rem;color:var(--mist);text-align:center;margin-top:12px;line-height:1.5">
@@ -2153,11 +2177,11 @@ async function loadCartAddresses() {
       <button class="option-btn ${a.id === selectedAddressId ? 'selected' : ''}" data-addr="${a.id}" style="flex-direction:column;align-items:flex-start;gap:4px;padding:14px">
         <div style="display:flex;align-items:center;gap:10px;width:100%">
           <div class="check"></div>
-          <strong>${a.title}</strong>
+          <strong>${escapeHTML(a.title)}</strong>
           ${a.is_default ? '<span style="font-size:.55rem;color:var(--ember);font-weight:700;letter-spacing:1px">VARSAYILAN</span>' : ''}
         </div>
-        <div style="font-size:.72rem;color:var(--fog);margin-left:30px">${a.full_address}</div>
-        ${a.note ? `<div style="font-size:.66rem;color:var(--amber);margin-left:30px;font-style:italic">${a.note}</div>` : ''}
+        <div style="font-size:.72rem;color:var(--fog);margin-left:30px">${escapeHTML(a.full_address)}</div>
+        ${a.note ? `<div style="font-size:.66rem;color:var(--amber);margin-left:30px;font-style:italic">${escapeHTML(a.note)}</div>` : ''}
       </button>
     `).join('') + `<button class="option-btn" id="addNewAddr" style="justify-content:center;margin-top:4px">➕ Yeni Adres Ekle</button>`;
 
@@ -2188,17 +2212,23 @@ function renderPaymentOptions() {
     return { discount: c.discount || 0, enabled: c.enabled !== false };
   };
 
+  const QR_METHODS = ['multinet', 'setcard', 'metropolcard', 'pluxee', 'edenred'];
   const methods = [
-    { key:'cash',      ico:'💵', name:'Kapıda Nakit',  desc:'Teslim sırasında nakit ödeme' },
-    { key:'card_door', ico:'💳', name:'Kapıda Kart',   desc:'Teslim sırasında POS ile'     },
-    { key:'online',    ico:'📱', name:'Online Kart',   desc:'Şimdi kredi/banka kartı ile'  },
+    { key:'cash',         ico:'💵', name:'Kapıda Nakit',           desc:'Teslim sırasında nakit ödeme'  },
+    { key:'card_door',    ico:'💳', name:'Kapıda Kart',            desc:'Teslim sırasında POS ile'      },
+    { key:'online',       ico:'📱', name:'Online Kart',            desc:'Şimdi kredi/banka kartı ile'   },
+    { key:'multinet',     ico:'<img src="multinet.png"     alt="Multinet"     style="width:28px;height:28px;object-fit:contain;border-radius:4px">', name:'Kapıda MULTİNET QR',    desc:'Teslimde Multinet QR ile'     },
+    { key:'setcard',      ico:'<img src="setcard.png"      alt="Setcard"      style="width:28px;height:28px;object-fit:contain;border-radius:4px">', name:'Kapıda SETCARD QR',     desc:'Teslimde Setcard QR ile'      },
+    { key:'metropolcard', ico:'<img src="metropol.png"     alt="MetropolCard" style="width:28px;height:28px;object-fit:contain;border-radius:4px">', name:'Kapıda MetropolCard QR', desc:'Teslimde MetropolCard QR ile' },
+    { key:'pluxee',       ico:'<img src="pluxee.png"       alt="Pluxee"       style="width:28px;height:28px;object-fit:contain;border-radius:4px">', name:'Kapıda Pluxee QR',      desc:'Teslimde Pluxee QR ile'       },
+    { key:'edenred',      ico:'<img src="edenred.png"      alt="EdenRed"      style="width:28px;height:28px;object-fit:contain;border-radius:4px">', name:'Kapıda EdenRed QR',     desc:'Teslimde EdenRed QR ile'      },
   ];
 
   // Aktif olan ilk yöntemi otomatik seç
   const activePayments = methods.filter(m => {
     const conf = getConf(m.key);
     if (!conf.enabled) return false;
-    if (cashDisabled && (m.key === 'cash' || m.key === 'card_door')) return false;
+    if (cashDisabled && (m.key === 'cash' || m.key === 'card_door' || QR_METHODS.includes(m.key))) return false;
     return true;
   });
 
@@ -2209,7 +2239,7 @@ function renderPaymentOptions() {
   grid.innerHTML = methods.map(m => {
     const conf    = getConf(m.key);
     const sysOff  = !conf.enabled;
-    const custOff = cashDisabled && (m.key === 'cash' || m.key === 'card_door');
+    const custOff = cashDisabled && (m.key === 'cash' || m.key === 'card_door' || QR_METHODS.includes(m.key));
     const disabled = sysOff || custOff;
     const disc     = conf.discount || 0;
 
@@ -2245,20 +2275,11 @@ async function checkout() {
   if (!selectedAddressId) return toast('⚠️', 'Lütfen bir adres seç');
   if (!selectedPayment) return toast('⚠️', 'Lütfen ödeme yöntemi seç');
 
-  // Min basket check
+  // Global minimum check
   const subtotalChk = cartTotal();
-  let minBasketChk = 0;
-  let deliveryFeeChk = 0;
-  if (state.addresses && state.business && state.business.delivery_zones) {
-    const selAddr = state.addresses.find(a => a.id === selectedAddressId);
-    if (selAddr) {
-      const firstPart = selAddr.full_address.split(',')[0].trim();
-      const zone = state.business.delivery_zones[firstPart];
-      if (zone) { minBasketChk = zone.min_basket || 0; deliveryFeeChk = zone.delivery_fee || 0; }
-    }
-  }
-  if (minBasketChk > 0 && subtotalChk < minBasketChk) {
-    return toast('⚠️', 'Minimum sepet tutarı ' + minBasketChk + ' ₺');
+  const orderMinChk = (state.business && state.business.order_minimum) || 0;
+  if (orderMinChk > 0 && subtotalChk < orderMinChk) {
+    return toast('⚠️', 'Minimum sipariş tutarı ' + orderMinChk + ' ₺');
   }
 
   const btn = document.getElementById('checkoutBtn');
@@ -2309,10 +2330,21 @@ async function checkout() {
 
 // ── PayTR Email Modal ─────────────────────────────────────
 function openPaytrEmailModal(orderId, total) {
-  const modal = document.getElementById('emailModal');
+  const modal    = document.getElementById('emailModal');
+  const input    = document.getElementById('paytrEmailInput');
+  const errorEl  = document.getElementById('paytrEmailError');
+
   modal.style.display = 'flex';
-  document.getElementById('paytrEmailInput').value = '';
-  document.getElementById('paytrEmailInput').focus();
+  input.value = '';
+  input.style.borderColor = 'var(--veil)';
+  errorEl.style.display = 'none';
+  setTimeout(() => input.focus(), 100);
+
+  // Clear error on typing
+  input.oninput = () => {
+    errorEl.style.display = 'none';
+    input.style.borderColor = 'var(--veil)';
+  };
 
   document.getElementById('paytrEmailCancel').onclick = () => {
     modal.style.display = 'none';
@@ -2321,9 +2353,13 @@ function openPaytrEmailModal(orderId, total) {
   };
 
   document.getElementById('paytrEmailSubmit').onclick = async () => {
-    const email = document.getElementById('paytrEmailInput').value.trim();
+    const email = input.value.trim();
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return toast('⚠️', 'Geçerli bir e-posta adresi girin');
+      errorEl.textContent = 'Geçerli bir e-posta adresi giriniz';
+      errorEl.style.display = 'block';
+      input.style.borderColor = '#e05555';
+      input.focus();
+      return;
     }
     modal.style.display = 'none';
     await openPaytrIframe(orderId, email);
@@ -2387,8 +2423,9 @@ async function openPaytrIframe(orderId, email) {
     }, 3000); // 3 saniyede bir kontrol
 
     document.getElementById('paytrModalClose').onclick = () => {
-      closePaytrModal();
+      clearInterval(pollTimer);
       window.removeEventListener('message', onPaytrMessage);
+      closePaytrModal();
       toast('ℹ️', 'Ödeme iptal edildi');
       renderTab('orders');
     };
@@ -2474,7 +2511,7 @@ async function renderOrders(container) {
     }
 
     const statusMap = { pending_payment:{lbl:'💳 Ödeme Bekleniyor',cls:'pending'}, payment_failed:{lbl:'❌ Ödeme Alınamadı',cls:'cancelled'}, pending:{lbl:'⏳ Bekliyor',cls:'pending'}, confirmed:{lbl:'🔥 Hazırlanıyor',cls:'confirmed'}, delivered:{lbl:'✅ Teslim',cls:'delivered'}, cancelled:{lbl:'❌ İptal',cls:'cancelled'} };
-    const payMap    = { cash:'💵 Kapıda Nakit', card_door:'💳 Kapıda Kart', online:'📱 Online' };
+    const payMap    = { cash:'💵 Kapıda Nakit', card_door:'💳 Kapıda Kart', online:'📱 Online', multinet:'Kapıda Multinet QR', setcard:'Kapıda Setcard QR', metropolcard:'Kapıda MetropolCard QR', pluxee:'Kapıda Pluxee QR', edenred:'Kapıda EdenRed QR' };
 
     let html = '<h2 style="font-family:\'Lora\',serif;font-size:1.3rem;margin-bottom:14px">Siparişlerim</h2>';
     orders.forEach(o => {
@@ -2488,8 +2525,8 @@ async function renderOrders(container) {
           </div>
           <div class="ol-status ${st.cls}">${st.lbl}</div>
         </div>
-        <div class="ol-items">${items.map(i => `${i.emoji||''} ${i.name} ×${i.qty}`).join(' · ')}</div>
-        ${o.address_title ? `<div style="font-size:.65rem;color:var(--mist);margin-bottom:6px">📍 ${o.address_title}</div>` : ''}
+        <div class="ol-items">${items.map(i => `${escapeHTML(i.emoji||'')} ${escapeHTML(i.name)} ×${i.qty}`).join(' · ')}</div>
+        ${o.address_title ? `<div style="font-size:.65rem;color:var(--mist);margin-bottom:6px">📍 ${escapeHTML(o.address_title)}</div>` : ''}
         <div class="ol-bottom">
           <div class="ol-total">${o.total} ₺</div>
         </div>
@@ -2497,7 +2534,7 @@ async function renderOrders(container) {
     });
     container.innerHTML = html;
   } catch (e) {
-    container.innerHTML = `<div class="empty-state"><div class="ico">⚠️</div><div class="txt">Yüklenemedi: ${e.message}</div></div>`;
+    container.innerHTML = `<div class="empty-state"><div class="ico">⚠️</div><div class="txt">Yüklenemedi: ${escapeHTML(e.message)}</div></div>`;
   }
 }
 
@@ -2526,9 +2563,9 @@ async function renderProfile(container) {
     <div class="profile-card">
       <div class="profile-avatar">👤</div>
       <div class="profile-info">
-        <div class="profile-name">${c.name || 'Misafir'}</div>
+        <div class="profile-name">${escapeHTML(c.name || 'Misafir')}</div>
         <div class="profile-phone">+90 ${formatPhone((c.phone||'').replace(/^90/,''))}</div>
-        ${c.email ? `<div style="font-size:.72rem;color:var(--mist);margin-top:3px">✉️ ${c.email}</div>` : ''}
+        ${c.email ? `<div style="font-size:.72rem;color:var(--mist);margin-top:3px">✉️ ${escapeHTML(c.email)}</div>` : ''}
       </div>
     </div>
 
@@ -2550,17 +2587,17 @@ async function renderProfile(container) {
       <div class="ps-title">ℹ️ İşletme</div>
       <div class="profile-row" id="pfBizName" style="cursor:pointer">
         <div class="pr-icon">🏪</div>
-        <div class="pr-label">${biz.business_name || "Bi' Kokoreç"}</div>
+        <div class="pr-label">${escapeHTML(biz.business_name || "Bi' Kokoreç")}</div>
         <div class="pr-arrow" style="font-size:.75rem">🔗</div>
       </div>
       <div class="profile-row" id="pfLocation" style="cursor:pointer">
         <div class="pr-icon">📍</div>
-        <div class="pr-label">${biz.business_address || 'Dumlupınar, Balıkesir'}</div>
+        <div class="pr-label">${escapeHTML(biz.business_address || 'Dumlupınar, Balıkesir')}</div>
         <div class="pr-arrow" style="font-size:.75rem">🗺️</div>
       </div>
       <div class="profile-row" id="pfCall" style="cursor:pointer">
         <div class="pr-icon">📞</div>
-        <div class="pr-label">${biz.business_phone || ''}</div>
+        <div class="pr-label">${escapeHTML(biz.business_phone || '')}</div>
         <div class="pr-arrow">📱</div>
       </div>
       <div class="profile-row" id="pfWhatsapp" style="cursor:pointer">
@@ -2662,11 +2699,11 @@ function renderProfileAddresses(addrs) {
   wrap.innerHTML = addrs.map(a => `
     <div class="addr-card ${a.is_default?'default':''}" data-addr="${a.id}">
       <div class="addr-top">
-        <div class="addr-title">${a.title}</div>
+        <div class="addr-title">${escapeHTML(a.title)}</div>
         ${a.is_default ? '<div class="addr-default-badge">Varsayılan</div>' : ''}
       </div>
-      <div class="addr-text">${a.full_address}</div>
-      ${a.note ? `<div class="addr-note">📝 ${a.note}</div>` : ''}
+      <div class="addr-text">${escapeHTML(a.full_address)}</div>
+      ${a.note ? `<div class="addr-note">📝 ${escapeHTML(a.note)}</div>` : ''}
       <div class="addr-actions">
         <button class="addr-btn danger" data-del="${a.id}">Sil</button>
       </div>
@@ -2917,32 +2954,23 @@ function showInfo(title, text) {
   document.body.classList.add('no-scroll');
 }
 function showZonesSheet() {
-  const zones = (state.business && state.business.delivery_zones) ? state.business.delivery_zones : {};
-  const keys  = Object.keys(zones).sort();
+  const min    = (state.business && state.business.order_minimum)   || 0;
+  const margin = (state.business && state.business.delivery_margin) || 0;
+  const fee    = (state.business && state.business.delivery_fee)    || 0;
 
-  document.getElementById('infoSheetTitle').textContent = '🚚 Teslimat Bölgeleri';
+  document.getElementById('infoSheetTitle').textContent = '🚚 Teslimat Bilgisi';
 
-  if (!keys.length) {
-    document.getElementById('infoSheetBody').innerHTML = '<p style="color:var(--mist)">Teslimat bölgesi bilgisi henüz eklenmemiş.</p>';
-  } else {
-    let html = '<p style="font-size:.78rem;color:var(--mist);margin-bottom:16px;line-height:1.6">Aşağıdaki mahallelere teslimat yapılmaktadır. Minimum sepet tutarının altında sipariş kabul edilmez.</p>';
+  let html = '';
+  if (min > 0)
+    html += `<div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(240,224,192,.08)"><span style="font-size:.85rem;color:var(--mist)">Minimum Sipariş</span><strong style="color:var(--ember)">${min} ₺</strong></div>`;
+  if (fee > 0 && margin > 0)
+    html += `<div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(240,224,192,.08)"><span style="font-size:.85rem;color:var(--mist)">Teslimat Ücreti</span><strong style="color:var(--fog)">${fee} ₺</strong></div>`;
+  if (margin > 0)
+    html += `<div style="display:flex;justify-content:space-between;padding:12px 0"><span style="font-size:.85rem;color:var(--mist)">${margin} ₺ ve üzeri siparişlerde</span><strong style="color:var(--green)">Ücretsiz Teslimat 🎉</strong></div>`;
+  if (!html)
+    html = '<p style="color:var(--mist);font-size:.82rem">Teslimat bilgisi henüz eklenmemiş.</p>';
 
-    keys.forEach(mah => {
-      const z = zones[mah];
-      const fee = z.delivery_fee || 0;
-      html += '<div style="display:flex;justify-content:space-between;align-items:center;' +
-        'padding:10px 0;border-bottom:1px solid rgba(240,224,192,.08)">' +
-        '<span style="font-size:.82rem;color:var(--cream)">' + mah + '</span>' +
-        '<div style="text-align:right;flex-shrink:0;margin-left:12px">' +
-          '<div style="font-size:.75rem;color:var(--mist)">Min: <strong style="color:var(--ember)">' + (z.min_basket||0) + ' ₺</strong></div>' +
-          '<div style="font-size:.72rem;color:var(--mist)">Teslimat: <strong style="color:' + (fee===0?'var(--green)':'var(--fog)') + '">' + (fee===0?'Ücretsiz':fee+' ₺') + '</strong></div>' +
-        '</div>' +
-      '</div>';
-    });
-
-    document.getElementById('infoSheetBody').innerHTML = html;
-  }
-
+  document.getElementById('infoSheetBody').innerHTML = html;
   document.getElementById('infoSheet').classList.add('show');
   document.body.classList.add('no-scroll');
 }
@@ -3002,37 +3030,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 </script>
-
-  <!-- ── PayTR Email Modal ───────────────────────────────── -->
-  <div id="emailModal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);align-items:flex-end;justify-content:center">
-    <div style="background:var(--bg2);border-radius:var(--r-xl) var(--r-xl) 0 0;padding:24px 20px calc(24px + var(--safe-bot));width:100%;max-width:480px">
-      <div style="text-align:center;margin-bottom:20px">
-        <div style="font-size:2rem">💳</div>
-        <div style="font-family:'Lora',serif;font-size:1.2rem;font-weight:700;margin-top:8px">Online Ödeme</div>
-        <div style="font-size:.82rem;color:var(--mist);margin-top:6px">PayTR güvenli ödeme altyapısı kullanılmaktadır.<br>Dekont için e-posta adresinizi girin.</div>
-      </div>
-      <div style="margin-bottom:16px">
-        <label style="font-size:.75rem;font-weight:700;letter-spacing:.5px;color:var(--mist);display:block;margin-bottom:8px">E-POSTA ADRESİ</label>
-        <input id="paytrEmailInput" type="email" inputmode="email" placeholder="ornek@email.com"
-          style="width:100%;background:var(--bg3);border:1px solid var(--veil);border-radius:var(--r-lg);padding:14px 16px;color:var(--cream);font-size:1rem;box-sizing:border-box">
-      </div>
-      <button id="paytrEmailSubmit" class="btn-primary" style="width:100%;margin-bottom:12px">Ödemeye Geç →</button>
-      <button id="paytrEmailCancel" style="width:100%;background:none;border:none;color:var(--mist);font-size:.85rem;padding:8px;cursor:pointer">İptal</button>
-    </div>
-  </div>
-
-  <!-- ── PayTR iFrame Modal ─────────────────────────────── -->
-  <div id="paytrModal" style="display:none;position:fixed;inset:0;z-index:210;background:rgba(0,0,0,.85);align-items:center;justify-content:center;padding:16px">
-    <div style="background:#fff;border-radius:var(--r-xl);width:100%;max-width:480px;overflow:hidden;position:relative">
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg1)">
-        <span style="font-size:.85rem;font-weight:700;color:var(--cream)">🔒 Güvenli Ödeme</span>
-        <button id="paytrModalClose" style="background:none;border:none;color:var(--mist);font-size:1.4rem;cursor:pointer;line-height:1">×</button>
-      </div>
-      <iframe id="paytrFrame" src="" frameborder="0" scrolling="yes"
-        style="width:100%;height:500px;display:block"></iframe>
-    </div>
-  </div>
-
 
   <!-- Version Update Modal -->
   <div id="updateModal" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.85);backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:20px">
