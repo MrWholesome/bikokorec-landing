@@ -1967,11 +1967,24 @@ function addToCart() {
   // Kapalı saat kontrolü sadece sipariş sırasında backend tarafından yapılır
 
   const item = sheetState.item;
+  const itemCount = sheetState.itemCount || 1;
   // Check required option groups
   for (const gKey of (item.option_groups || [])) {
     const g = state.menu.option_groups[gKey];
-    if (g?.required && g.type === 'single' && !sheetState.selections[gKey]) {
-      return toast('⚠️', `${g.label} zorunlu`);
+    if (!g?.required || g.type !== 'single') continue;
+
+    if (itemCount > 1 && !gKey.startsWith('icecek_')) {
+      // Menü ürünlerinde seçimler index'li key ile saklanır (kiyim__1, kiyim__2, ...)
+      for (let i = 1; i <= itemCount; i++) {
+        const indexedKey = gKey + '__' + i;
+        if (!sheetState.selections[indexedKey]) {
+          return toast('⚠️', `${i}. ekmek için ${g.label} seçimi zorunlu`);
+        }
+      }
+    } else {
+      if (!sheetState.selections[gKey]) {
+        return toast('⚠️', `${g.label} seçimi zorunlu`);
+      }
     }
   }
 
